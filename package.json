@@ -1,19 +1,32 @@
 {
   "name": "abai-bol-portfolio",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "robot:prepare": "gltfjsx public/robot.glb --transform --types"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
+    "@paper-design/shaders-react": "0.0.80",
+    "@react-three/drei": "latest",
+    "@react-three/fiber": "latest",
+    "@shadergradient/react": "latest",
+    "camera-controls": "latest",
+    "curtainsjs": "latest",
     "gsap": "latest",
-    "vite": "latest",
+    "motion": "latest",
+    "ogl": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "three": "latest",
+    "three-stdlib": "latest"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@vitejs/plugin-react": "latest",
+    "gltfjsx": "latest",
+    "vite": "latest"
+  }
 }
