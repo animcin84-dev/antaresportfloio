@@ -27,6 +27,13 @@ test('desktop experience renders full-screen robot and interactive systems', asy
   await expect(controlTab).toHaveAttribute('aria-selected', 'true')
   await expect(page.locator('.eng-copy h3')).toContainText('CONTROL')
 
+  const indexButton = page.locator('.mission-index-button')
+  await expect(indexButton).toBeVisible()
+  await indexButton.click()
+  await expect(page.getByRole('dialog', { name: /ABAI BOL mission index/i })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: /ABAI BOL mission index/i })).toBeHidden()
+
   await page.locator('.orbit-section').scrollIntoViewIfNeeded()
   await expect(page.locator('.mission-orbit-wrap canvas')).toBeVisible()
 
