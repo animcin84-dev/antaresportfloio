@@ -9,11 +9,38 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm install
+      - name: Dependency inventory
+        run: npm list --depth=0
+      - name: Production dependency audit
+        run: npm audit --omit=dev || true
       - run: npm run build
+      - name: Start production preview
+        run: |
+          npm run preview -- --port 4173 > /tmp/abai-bol-vite.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173 >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/abai-bol-vite.log
+          exit 1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke tests
+        run: npm run test:smoke
+      - name: Capture visual QA
+        run: |
+          mkdir -p visual-qa
+          npx playwright screenshot --browser chromium --viewport-size="1440,1000" --full-page --wait-for-timeout=3500 http://127.0.0.1:4173 visual-qa/abai-bol-desktop.png
+          npx playwright screenshot --browser chromium --viewport-size="390,844" --full-page --wait-for-timeout=3500 http://127.0.0.1:4173 visual-qa/abai-bol-mobile.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: abai-bol-v2-visual-qa
+          path: visual-qa/
+          retention-days: 7
