@@ -4,6 +4,7 @@ import App from './App'
 import MissionNav from './components/MissionNav'
 import './styles.css'
 import './mission-nav.css'
+import './v3.css'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
