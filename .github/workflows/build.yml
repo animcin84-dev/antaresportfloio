@@ -37,10 +37,10 @@ jobs:
       - name: Capture visual QA
         run: |
           mkdir -p visual-qa
-          npx playwright screenshot --browser chromium --viewport-size="1440,1000" --full-page --wait-for-timeout=3500 http://127.0.0.1:4173 visual-qa/abai-bol-desktop.png
-          npx playwright screenshot --browser chromium --viewport-size="390,844" --full-page --wait-for-timeout=3500 http://127.0.0.1:4173 visual-qa/abai-bol-mobile.png
+          npx playwright screenshot --browser chromium --viewport-size="1440,1000" --full-page --wait-for-timeout=4500 http://127.0.0.1:4173 visual-qa/abai-bol-v3-desktop.png
+          npx playwright screenshot --browser chromium --viewport-size="390,844" --full-page --wait-for-timeout=4500 http://127.0.0.1:4173 visual-qa/abai-bol-v3-mobile.png
       - uses: actions/upload-artifact@v4
         with:
-          name: abai-bol-v2-visual-qa
+          name: abai-bol-v3-visual-qa
           path: visual-qa/
           retention-days: 7
