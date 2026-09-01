@@ -6,7 +6,7 @@ const chapters = [
   ['02', 'IDENTITY', '#identity'],
   ['04', 'MISSION', '#mission'],
   ['05', 'ENGINEERING', '#engineering'],
-  ['06', 'ARCHIVE', '#archive'],
+  ['06', 'ARCHIVE', '.orbit-section'],
   ['07', 'RECORD', '#record'],
   ['08', 'TEAM', '#team'],
 ]
