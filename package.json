@@ -12,23 +12,23 @@
   },
   "dependencies": {
     "@paper-design/shaders-react": "0.0.80",
-    "@react-three/drei": "latest",
-    "@react-three/fiber": "latest",
-    "@shadergradient/react": "latest",
-    "camera-controls": "latest",
-    "curtainsjs": "latest",
-    "gsap": "latest",
-    "motion": "latest",
-    "ogl": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "three": "latest",
-    "three-stdlib": "latest"
+    "@react-three/drei": "10.7.8",
+    "@react-three/fiber": "9.7.0",
+    "@shadergradient/react": "2.4.20",
+    "camera-controls": "3.1.2",
+    "curtainsjs": "8.1.6",
+    "gsap": "3.15.0",
+    "motion": "13.1.1",
+    "ogl": "1.0.11",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "three": "0.185.1",
+    "three-stdlib": "2.36.1"
   },
   "devDependencies": {
     "@playwright/test": "1.55.0",
-    "@vitejs/plugin-react": "latest",
-    "gltfjsx": "latest",
-    "vite": "latest"
+    "@vitejs/plugin-react": "6.1.1",
+    "gltfjsx": "6.5.3",
+    "vite": "8.2.2"
   }
 }
