@@ -7,6 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
+    "test:smoke": "playwright test tests/smoke.spec.js --project=chromium",
     "robot:prepare": "gltfjsx public/robot.glb --transform --types"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "three-stdlib": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "1.55.0",
     "@vitejs/plugin-react": "latest",
     "gltfjsx": "latest",
     "vite": "latest"
