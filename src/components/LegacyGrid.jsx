@@ -1,15 +1,11 @@
 import React, { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { awards } from '../data'
+import { awards, EVIDENCE_DRIVE_URL } from '../data'
 import { NumberTicker, Reveal } from './Primitives'
 
 gsap.registerPlugin(ScrollTrigger)
 
-// Source DNA:
-// - codrops-sticky-grid-scroll-main.zip: sticky grid + staggered scroll choreography
-// - magicui-main.zip: animated number/stat treatment
-// - motion-primitives-website-main.zip: layered grain/spotlight surface treatment
 export default function LegacyGrid({ reduced }) {
   const root = useRef(null)
 
@@ -19,11 +15,8 @@ export default function LegacyGrid({ reduced }) {
       const cards = gsap.utils.toArray('.legacy-card')
       cards.forEach((card, i) => {
         gsap.fromTo(card,
-          { opacity: .18, y: 70 + (i % 3) * 18, scale: .96 },
-          {
-            opacity: 1, y: 0, scale: 1,
-            scrollTrigger: { trigger: card, start: 'top 92%', end: 'top 58%', scrub: .7 },
-          }
+          { opacity: .2, y: 72 + (i % 3) * 16, scale: .965 },
+          { opacity: 1, y: 0, scale: 1, scrollTrigger: { trigger: card, start: 'top 92%', end: 'top 58%', scrub: .7 } }
         )
       })
       gsap.to('.legacy-sticky-line b', {
@@ -39,10 +32,11 @@ export default function LegacyGrid({ reduced }) {
   return (
     <section className="legacy-grid-section" ref={root} id="record">
       <div className="legacy-sticky">
-        <div className="legacy-kicker"><span>05 / FLIGHT RECORDER</span><span>ANTARES → ABAI BOL</span></div>
+        <div className="legacy-kicker"><span>07 / FLIGHT RECORDER</span><span>ANTARES → ABAI BOL</span></div>
         <Reveal><h2>THE RECORD<br/><em>DOESN'T RESET.</em></h2></Reveal>
-        <div className="legacy-count"><NumberTicker value={awards.length} /><span>RECORDED<br/>DISTINCTIONS</span></div>
-        <p>The public identity changed. The engineering record stays attached to the same team story.</p>
+        <div className="legacy-count"><NumberTicker value={awards.length} /><span>TEAM-PROVIDED<br/>DISTINCTIONS</span></div>
+        <p>This recorder now follows the final award list supplied by the team. Certificates and supporting material remain available in the evidence archive instead of being silently replaced by older scraped results.</p>
+        <a className="evidence-link" href={EVIDENCE_DRIVE_URL} target="_blank" rel="noreferrer">OPEN CERTIFICATE ARCHIVE ↗</a>
         <div className="legacy-sticky-line"><b /></div>
       </div>
       <div className="legacy-grid">
