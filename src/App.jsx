@@ -1,11 +1,11 @@
 import React, { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { motion } from 'motion/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import FullscreenSpline from './components/FullscreenSpline'
 import EngineeringConsole from './components/EngineeringConsole'
 import LegacyGrid from './components/LegacyGrid'
-import { CursorFollower, FilmGrain, Magnetic, Reveal, ScrambleText } from './components/Primitives'
-import { seasons } from './data'
+import { CursorFollower, FilmGrain, Magnetic, Reveal } from './components/Primitives'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -20,7 +20,8 @@ function useReducedMotion() {
   useEffect(() => {
     const query = matchMedia('(prefers-reduced-motion: reduce)')
     const sync = () => setReduced(query.matches)
-    sync(); query.addEventListener('change', sync)
+    sync()
+    query.addEventListener('change', sync)
     return () => query.removeEventListener('change', sync)
   }, [])
   return reduced
@@ -110,9 +111,7 @@ function Mission() {
       <div className="mission-v2-shade" />
       <div className="mission-v2-inner">
         <SectionHead left="04 / FLAGSHIP MISSION" right="DEPOK · INDONESIA / JAN 2024" />
-        <div className="mission-v2-title">
-          <span>ALMATY</span><i>→</i><span>DEPOK</span>
-        </div>
+        <div className="mission-v2-title"><span>ALMATY</span><i>→</i><span>DEPOK</span></div>
         <div className="mission-map">
           <svg viewBox="0 0 1200 420" aria-label="Stylized route from Almaty to Depok" role="img">
             <path className="terrain a" d="M40 120 C180 52 290 68 402 145 S616 226 720 155 S930 52 1160 132" />
@@ -156,7 +155,7 @@ function OrbitSection() {
       <SectionHead left="06 / MISSION ORBIT" right="R3F / SEASON ARCHIVE" />
       <div className="orbit-copy">
         <h2>FOUR SEASONS.<br/><em>ONE CONTINUOUS BUILD.</em></h2>
-        <p>Drag your attention around the archive: seasons orbit as one system instead of becoming another flat row of cards.</p>
+        <p>Move around the archive: seasons orbit as one system instead of becoming another flat row of cards.</p>
       </div>
       <Suspense fallback={<div className="orbit-fallback">INITIALIZING MISSION ORBIT…</div>}><MissionOrbit /></Suspense>
     </section>
@@ -175,7 +174,7 @@ function TeamSystem() {
       <SectionHead left="08 / TEAM SYSTEM" right="ONE MACHINE / MANY DISCIPLINES" light />
       <h2>BUILDING IS<br/><em>A TEAM SPORT.</em></h2>
       <div className="team-system-grid">
-        {items.map(([n, title, copy], i) => (
+        {items.map(([n, title, copy]) => (
           <motion.article key={n} whileHover={{ y: -8 }} transition={{ duration: .28 }}>
             <span>{n}</span><h3>{title}</h3><p>{copy}</p><i />
           </motion.article>
@@ -228,7 +227,8 @@ export default function App() {
       const max = document.documentElement.scrollHeight - innerHeight
       progress.current?.style.setProperty('transform', `scaleX(${max > 0 ? scrollY / max : 0})`)
     }
-    update(); addEventListener('scroll', update, { passive: true })
+    update()
+    addEventListener('scroll', update, { passive: true })
     return () => removeEventListener('scroll', update)
   }, [])
 
