@@ -51,10 +51,6 @@ jobs:
         working-directory: ci-v6
         run: mv src/i18n.js src/i18n.jsx
 
-      - name: Production build
-        working-directory: ci-v6
-        run: npm run build
-
       - name: Create lightweight media fixtures for browser-only snapshot
         working-directory: ci-v6
         env:
@@ -64,6 +60,10 @@ jobs:
           for f in abai-bol-logo.jpg cad-black-purple.jpg cad-top.jpg robot-centerstage.jpg robot-into-deep.jpg robot-prototype.jpg team-almaty-2025.jpg team-bishkek-award.jpg team-bishkek.jpg team-daryn.jpg team-indonesia-award.jpg team-indonesia-field.jpg team-lepsi.jpg team-outdoors.jpg; do
             printf '%s' "$JPG_FIXTURE" | base64 -d > "public/assets/$f"
           done
+
+      - name: Production build
+        working-directory: ci-v6
+        run: npm run build
 
       - name: Install Chromium
         working-directory: ci-v6
