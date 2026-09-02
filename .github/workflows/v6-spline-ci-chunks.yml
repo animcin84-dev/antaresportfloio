@@ -47,6 +47,10 @@ jobs:
           node --check tests/structure.spec.js
           node --check tests/smoke.spec.js
 
+      - name: Apply canonical JSX extension fix
+        working-directory: ci-v6
+        run: mv src/i18n.js src/i18n.jsx
+
       - name: Production build
         working-directory: ci-v6
         run: npm run build
