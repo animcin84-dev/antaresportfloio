@@ -1,0 +1,26 @@
+name: V6 Export Source
+
+on:
+  push:
+    branches: [v6-spline-ci]
+    paths:
+      - '.github/workflows/v6-export-source.yml'
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode V6 source
+        run: |
+          rm -rf ci-v6 && mkdir ci-v6
+          cat ci/v6-source.00.part ci/v6-source.01.part ci/v6-source.02.part ci/v6-source.03.part ci/v6-source.04.part ci/v6-source.05.part | base64 -d > /tmp/v6.tar.xz
+          tar -xJf /tmp/v6.tar.xz -C ci-v6
+          test -f ci-v6/src/components/SplineHero.jsx
+          test -f ci-v6/src/components/MissionOrbit.jsx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v6-canonical-source-${{ github.run_id }}
+          path: ci-v6
+          if-no-files-found: error
