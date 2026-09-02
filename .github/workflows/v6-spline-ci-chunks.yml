@@ -20,6 +20,7 @@ jobs:
           tar -xJf /tmp/v6-source.tar.xz -C ci-v6
           test -f ci-v6/package.json
           test -f ci-v6/src/components/SplineHero.jsx
+          touch ci-v6/SUBMISSION-PACK.md ci-v6/CREDITS.md ci-v6/JURY-AUDIT.md ci-v6/FINAL-QA.md
 
       - uses: actions/setup-node@v4
         with:
