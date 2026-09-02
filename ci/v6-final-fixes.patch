@@ -1,0 +1,239 @@
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -3,6 +3,7 @@
+ import gsap from 'gsap'
+ import { ScrollTrigger } from 'gsap/ScrollTrigger'
+ import { useReducedMotion } from './lib/hooks'
++import { registerSmoothScroll, unregisterSmoothScroll } from './lib/smoothScroll'
+ import { useI18n } from './i18n'
+ import SplineHero from './components/SplineHero'
+ import MemoryCore from './components/MemoryCore'
+@@ -31,12 +32,15 @@
+       wheelMultiplier: 0.95,
+     })
+ 
++    registerSmoothScroll(lenis)
++
+     const raf = time => lenis.raf(time * 1000)
+     lenis.on('scroll', ScrollTrigger.update)
+     gsap.ticker.add(raf)
+     gsap.ticker.lagSmoothing(0)
+ 
+     return () => {
++      unregisterSmoothScroll(lenis)
+       gsap.ticker.remove(raf)
+       lenis.destroy()
+     }
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -47,7 +47,7 @@
+ .language-toggle button[aria-pressed="true"]{opacity:1;color:var(--current-text)}
+ 
+ /* Cursor */
+-.context-cursor-point,.context-cursor-label{position:fixed;z-index:9998;left:0;top:0;pointer-events:none;transform:translate3d(-120px,-120px,0);mix-blend-mode:difference}
++.context-cursor-point,.context-cursor-label{position:fixed;z-index:9998;left:0;top:0;pointer-events:none;mix-blend-mode:difference}
+ .context-cursor-point{width:5px;height:5px;margin:-2.5px;border-radius:50%;background:var(--white)}
+ .context-cursor-label{display:grid;place-items:center;width:66px;height:66px;margin:-33px;border:1px solid oklch(100% 0 0 / .72);border-radius:50%;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--white);opacity:0;transition:opacity .15s}
+ .context-cursor-label.is-visible{opacity:1}
+@@ -322,7 +322,7 @@
+ .people-disciplines i{font-style:normal;color:oklch(43% .19 5)}
+ 
+ /* Finale */
+-.finale{background:var(--current);color:var(--white);padding:8vh var(--page) 24px;min-height:70vh;display:grid;grid-template-columns:1fr auto;grid-template-rows:1fr auto;gap:30px}
++.finale{background:var(--current);color:var(--white);padding:8vh var(--page) 24px;min-height:70vh;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr auto;gap:30px}.finale>*{min-width:0;max-width:100%}
+ .finale>div>span{font-family:var(--mono);font-size:10px;letter-spacing:.12em}
+ .finale h2{font-family:var(--display);font-size:clamp(70px,12vw,184px);line-height:.7;letter-spacing:-.08em;margin:8vh 0 0}
+ .finale h2 em{color:var(--ink)}
+@@ -352,7 +352,7 @@
+   .spline-hero{height:220vh}.hero-scan{display:none}.hero-opening{top:auto;bottom:15%}.hero-opening h1{font-size:clamp(76px,27vw,146px)}
+   .hero-memory-copy,.hero-continuity-copy{width:calc(100% - 36px);bottom:15%}.hero-memory-copy h2,.hero-continuity-copy h2{font-size:clamp(46px,13vw,76px)}
+   .hero-progress{left:18px;right:18px;width:auto}.hero-stage-label{display:none}.memory-aperture{display:none}
+-  .identity-stage{grid-template-columns:1fr;gap:20px}.identity-axis{grid-template-columns:1fr auto 1fr}.identity-axis i{width:auto;height:1px}.identity-axis b{writing-mode:initial}
++  .identity-stage{grid-template-columns:minmax(0,1fr);gap:20px}.identity-axis{grid-template-columns:1fr auto 1fr}.identity-axis i{width:auto;height:1px}.identity-axis b{writing-mode:initial}
+   .identity-statement{grid-template-columns:1fr}.identity-statement h2{font-size:clamp(52px,15vw,82px)}
+   .memory-heading,.lineage-heading,.engineering-heading,.awards-heading,.archive-heading{grid-template-columns:1fr;gap:18px}.memory-heading p,.awards-heading p{grid-column:auto}
+   .memory-heading h2,.lineage-heading h2,.engineering-heading h2,.archive-heading h2{font-size:14vw}
+@@ -369,7 +369,7 @@
+   .complete-record article{grid-template-columns:34px 48px 1fr;gap:8px;padding:10px 0}.complete-record article em{grid-column:3;text-align:left}.record-label span:last-child{display:none}
+   .archive-heading>div{grid-template-columns:1fr}.archive-grid{grid-template-columns:1fr}.archive-grid figure,.archive-grid figure:nth-child(n){grid-column:auto!important;min-height:360px!important}
+   .people-chapter{grid-template-columns:1fr}.people-photo{min-height:68vh}.people-copy{padding:56px 18px}.people-copy h2{font-size:15vw}
+-  .finale{grid-template-columns:1fr;min-height:62vh}.finale nav{align-self:start}
++  .finale{grid-template-columns:minmax(0,1fr);min-height:62vh}.finale h2{font-size:clamp(48px,13vw,70px);max-width:100%}.finale nav{align-self:start}
+ }
+ 
+ /* 200% zoom */
+--- a/tests/smoke.spec.js
++++ b/tests/smoke.spec.js
+@@ -21,15 +21,31 @@
+   await expect(page.locator('.index-button')).toBeEnabled()
+ })
+ 
+-test('orbit exposes resilient DOM media and manual navigation', async ({ page }) => {
++test('orbit manual navigation advances the chapter and synchronizes scroll position', async ({ page }) => {
+   await page.setViewportSize({ width: 1440, height: 900 })
+   await page.goto('/?quality=low')
+   await page.locator('#orbit').scrollIntoViewIfNeeded()
+   await expect(page.locator('.orbit-media')).toBeVisible()
+-  const next = page.getByRole('button', { name: /Next season/i })
+-  await expect(next).toBeVisible()
+-  await next.click()
+-  await expect(page.locator('.orbit-copy')).toContainText('2024')
++
++  const status = page.locator('.orbit-copy > span')
++  const beforeText = await status.textContent()
++  const beforeIndex = Number(beforeText?.match(/^(\\d{2})/)?.[1] || 1)
++  const beforeY = await page.evaluate(() => scrollY)
++
++  const forward = beforeIndex < 4
++  const control = forward
++    ? page.getByRole('button', { name: /Next season/i })
++    : page.getByRole('button', { name: /Previous season/i })
++  const expectedIndex = forward ? beforeIndex + 1 : beforeIndex - 1
++
++  await expect(control).toBeVisible()
++  await control.click()
++  await expect(status).toContainText(`${String(expectedIndex).padStart(2, '0')} / 04`)
++
++  await expect.poll(
++    () => page.evaluate(() => scrollY),
++    { timeout: 2500 }
++  ).not.toBe(beforeY)
+ })
+ 
+ test('evidence dialog is accessible and source-linked', async ({ page }) => {
+--- a/src/components/ContextCursor.jsx
++++ b/src/components/ContextCursor.jsx
+@@ -3,25 +3,50 @@
+ export default function ContextCursor({ reduced }) {
+   const point = useRef(null)
+   const label = useRef(null)
++  const firstPoint = useRef(null)
++  const [ready, setReady] = useState(false)
+   const [text, setText] = useState('')
+ 
+   useEffect(() => {
+     if (reduced || matchMedia('(pointer: coarse)').matches) return
++
+     const move = event => {
++      if (!firstPoint.current) {
++        firstPoint.current = { x: event.clientX, y: event.clientY }
++        setReady(true)
++      }
++
+       point.current?.style.setProperty('transform', `translate3d(${event.clientX}px,${event.clientY}px,0)`)
+       label.current?.style.setProperty('transform', `translate3d(${event.clientX}px,${event.clientY}px,0)`)
++
+       const target = event.target.closest?.('[data-cursor]')
+       setText(target?.dataset.cursor || '')
+     }
++
+     addEventListener('pointermove', move, { passive: true })
+     return () => removeEventListener('pointermove', move)
+   }, [reduced])
+ 
+-  if (reduced) return null
++  if (reduced || !ready || !firstPoint.current) return null
++
++  const initialTransform = `translate3d(${firstPoint.current.x}px,${firstPoint.current.y}px,0)`
++
+   return (
+     <>
+-      <span ref={point} className="context-cursor-point" aria-hidden="true" />
+-      <span ref={label} className={`context-cursor-label ${text ? 'is-visible' : ''}`} aria-hidden="true">{text}</span>
++      <span
++        ref={point}
++        className="context-cursor-point"
++        style={{ transform: initialTransform }}
++        aria-hidden="true"
++      />
++      <span
++        ref={label}
++        className={`context-cursor-label ${text ? 'is-visible' : ''}`}
++        style={{ transform: initialTransform }}
++        aria-hidden="true"
++      >
++        {text}
++      </span>
+     </>
+   )
+ }
+--- a/src/components/MissionOrbit.jsx
++++ b/src/components/MissionOrbit.jsx
+@@ -7,6 +7,7 @@
+ import * as THREE from 'three'
+ import { seasons } from '../data'
+ import { useQualityTier, useViewportActivity } from '../lib/performance'
++import { scrollToPosition } from '../lib/smoothScroll'
+ import ResponsiveImage from './ResponsiveImage'
+ import OrbitFallback from './OrbitFallback'
+ 
+@@ -139,6 +140,7 @@
+ 
+ export default function MissionOrbit({ reduced }) {
+   const root = useRef()
++  const triggerRef = useRef(null)
+   const [activeIndex, setActiveIndex] = useState(0)
+   const [progress, setProgress] = useState(0)
+   const visible = useViewportActivity(root)
+@@ -171,19 +173,26 @@
+       },
+     })
+ 
+-    return () => trigger.kill()
++    triggerRef.current = trigger
++
++    return () => {
++      if (triggerRef.current === trigger) triggerRef.current = null
++      trigger.kill()
++    }
+   }, [reduced])
+ 
+   const goTo = index => {
+     const next = Math.max(0, Math.min(seasons.length - 1, index))
+     setActiveIndex(next)
+ 
+-    if (!root.current || reduced) return
+-    const scrollable = Math.max(0, root.current.offsetHeight - innerHeight)
+-    window.scrollTo({
+-      top: root.current.offsetTop + (next / (seasons.length - 1)) * scrollable,
+-      behavior: 'smooth',
+-    })
++    if (reduced) return
++
++    const trigger = triggerRef.current
++    if (!trigger) return
++
++    const ratio = next / (seasons.length - 1)
++    const target = trigger.start + (trigger.end - trigger.start) * ratio
++    scrollToPosition(target, { duration: 0.72 })
+   }
+ 
+   if (reduced) {
+--- a/src/lib/smoothScroll.js
++++ b/src/lib/smoothScroll.js
+@@ -0,0 +1,25 @@
++let activeLenis = null
++
++export function registerSmoothScroll(lenis) {
++  activeLenis = lenis
++}
++
++export function unregisterSmoothScroll(lenis) {
++  if (activeLenis === lenis) activeLenis = null
++}
++
++export function scrollToPosition(target, options = {}) {
++  if (activeLenis) {
++    activeLenis.scrollTo(target, {
++      duration: options.duration ?? 0.7,
++      force: true,
++      lock: false,
++    })
++    return
++  }
++
++  window.scrollTo({
++    top: target,
++    behavior: options.behavior ?? 'smooth',
++  })
++}
