@@ -13,11 +13,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Decode V6 snapshot
+      - name: Decode and patch V6 snapshot
         run: |
           rm -rf ci-v6 && mkdir ci-v6
           cat ci/v6-source.00.part ci/v6-source.01.part ci/v6-source.02.part ci/v6-source.03.part ci/v6-source.04.part ci/v6-source.05.part | base64 -d > /tmp/v6.tar.xz
           tar -xJf /tmp/v6.tar.xz -C ci-v6
+          cd ci-v6
+          patch -p1 < ../ci/v6-final-fixes.patch
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -61,23 +63,25 @@ jobs:
             console.log(`DIAG ${label} ${JSON.stringify(result,null,2)}`)
           }
 
-          test('report desktop and mobile overflow offenders', async ({ page }) => {
+          test('report patched desktop and mobile overflow offenders', async ({ page }) => {
             await inspect(page, 1440, 900, 'desktop')
             await inspect(page, 390, 844, 'mobile')
           })
 
-          test('report orbit scroll coordinates and button behavior', async ({ page }) => {
+          test('report patched orbit scroll coordinates and button behavior', async ({ page }) => {
             await page.setViewportSize({ width: 1440, height: 900 })
             await page.goto('/?quality=low')
             await page.locator('#orbit').scrollIntoViewIfNeeded()
-            await page.waitForTimeout(300)
-            const before = await page.evaluate(() => ({ y: scrollY, top: document.querySelector('#orbit')?.getBoundingClientRect().top, text: document.querySelector('.orbit-copy')?.textContent }))
+            await page.waitForTimeout(350)
+            const before = await page.evaluate(() => ({ y: scrollY, top: document.querySelector('#orbit')?.getBoundingClientRect().top, status: document.querySelector('.orbit-copy > span')?.textContent }))
             console.log('ORBIT BEFORE', JSON.stringify(before))
-            const next = page.getByRole('button', { name: /Next season/i })
-            console.log('NEXT disabled=', await next.isDisabled())
-            if (!(await next.isDisabled())) await next.click()
-            await page.waitForTimeout(500)
-            const after = await page.evaluate(() => ({ y: scrollY, top: document.querySelector('#orbit')?.getBoundingClientRect().top, text: document.querySelector('.orbit-copy')?.textContent }))
+            const ordinal = Number((before.status || '').match(/^(\d{2})/)?.[1] || 1)
+            const name = ordinal < 4 ? /Next season/i : /Previous season/i
+            const control = page.getByRole('button', { name })
+            console.log('CONTROL=', ordinal < 4 ? 'NEXT' : 'PREVIOUS', 'disabled=', await control.isDisabled())
+            if (!(await control.isDisabled())) await control.click()
+            await page.waitForTimeout(1000)
+            const after = await page.evaluate(() => ({ y: scrollY, top: document.querySelector('#orbit')?.getBoundingClientRect().top, status: document.querySelector('.orbit-copy > span')?.textContent }))
             console.log('ORBIT AFTER', JSON.stringify(after))
           })
           EOF
