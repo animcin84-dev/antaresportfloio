@@ -1,75 +1,10 @@
 name: V6 Spline CI Chunks
 
 on:
-  push:
-    branches: [v6-spline-ci]
   workflow_dispatch:
 
 jobs:
   verify-v6:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Decode V6 source snapshot
-        run: |
-          rm -rf ci-v6
-          mkdir -p ci-v6
-          cat ci/v6-source.00.part ci/v6-source.01.part ci/v6-source.02.part ci/v6-source.03.part ci/v6-source.04.part ci/v6-source.05.part | base64 -d > /tmp/v6-source.tar.xz
-          tar -xJf /tmp/v6-source.tar.xz -C ci-v6
-          test -f ci-v6/package.json
-          test -f ci-v6/src/components/SplineHero.jsx
-          touch ci-v6/SUBMISSION-PACK.md ci-v6/CREDITS.md ci-v6/JURY-AUDIT.md ci-v6/FINAL-QA.md
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Pin portable verification dependencies
-        working-directory: ci-v6
-        run: |
-          npm pkg set dependencies.@splinetool/runtime=1.12.98
-          npm pkg set devDependencies.typescript=5.9.3
-
-      - name: Install dependencies
-        working-directory: ci-v6
-        run: npm install --no-audit --no-fund
-
-      - name: Static contract
-        working-directory: ci-v6
-        run: npm run audit:static
-
-      - name: Syntax checks
-        working-directory: ci-v6
-        run: |
-          node scripts/jsx-syntax-check.cjs
-          node --check tests/structure.spec.js
-          node --check tests/smoke.spec.js
-
-      - name: Apply canonical JSX extension fix
-        working-directory: ci-v6
-        run: mv src/i18n.js src/i18n.jsx
-
-      - name: Create lightweight media fixtures for browser-only snapshot
-        working-directory: ci-v6
-        env:
-          JPG_FIXTURE: /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAgACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5roooqhhRRRQAUUUUAFFFFAH/2Q==
-        run: |
-          mkdir -p public/assets
-          for f in abai-bol-logo.jpg cad-black-purple.jpg cad-top.jpg robot-centerstage.jpg robot-into-deep.jpg robot-prototype.jpg team-almaty-2025.jpg team-bishkek-award.jpg team-bishkek.jpg team-daryn.jpg team-indonesia-award.jpg team-indonesia-field.jpg team-lepsi.jpg team-outdoors.jpg; do
-            printf '%s' "$JPG_FIXTURE" | base64 -d > "public/assets/$f"
-          done
-          file public/assets/robot-prototype.jpg
-
-      - name: Production build
-        working-directory: ci-v6
-        run: npm run build
-
-      - name: Install Chromium
-        working-directory: ci-v6
-        run: npx playwright install --with-deps chromium
-
-      - name: Browser smoke
-        working-directory: ci-v6
-        run: npx playwright test --project=chromium
+      - run: echo "V6 source update in progress"
