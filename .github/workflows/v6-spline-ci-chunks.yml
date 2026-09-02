@@ -1,0 +1,53 @@
+name: V6 Spline CI Chunks
+
+on:
+  push:
+    branches: [v6-spline-ci]
+  workflow_dispatch:
+
+jobs:
+  verify-v6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decode V6 source snapshot
+        run: |
+          rm -rf ci-v6
+          mkdir -p ci-v6
+          cat ci/v6-source.00.part ci/v6-source.01.part ci/v6-source.02.part ci/v6-source.03.part ci/v6-source.04.part ci/v6-source.05.part | base64 -d > /tmp/v6-source.tar.xz
+          tar -xJf /tmp/v6-source.tar.xz -C ci-v6
+          test -f ci-v6/package.json
+          test -f ci-v6/src/components/SplineHero.jsx
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: ci-v6
+        run: npm install --no-audit --no-fund
+
+      - name: Static contract
+        working-directory: ci-v6
+        run: npm run audit:static
+
+      - name: Syntax checks
+        working-directory: ci-v6
+        run: |
+          node scripts/jsx-syntax-check.cjs
+          node --check tests/structure.spec.js
+          node --check tests/smoke.spec.js
+
+      - name: Production build
+        working-directory: ci-v6
+        run: npm run build
+
+      - name: Install Chromium
+        working-directory: ci-v6
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser smoke
+        working-directory: ci-v6
+        run: npx playwright test --project=chromium
