@@ -1,0 +1,86 @@
+name: V6 Overflow Diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [v6-spline-ci]
+    paths:
+      - '.github/workflows/v6-overflow-diagnostic.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode V6 snapshot
+        run: |
+          rm -rf ci-v6 && mkdir ci-v6
+          cat ci/v6-source.00.part ci/v6-source.01.part ci/v6-source.02.part ci/v6-source.03.part ci/v6-source.04.part ci/v6-source.05.part | base64 -d > /tmp/v6.tar.xz
+          tar -xJf /tmp/v6.tar.xz -C ci-v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install
+        working-directory: ci-v6
+        run: npm install --no-audit --no-fund
+      - name: Build
+        working-directory: ci-v6
+        run: npm run build
+      - name: Install Chromium
+        working-directory: ci-v6
+        run: npx playwright install --with-deps chromium
+      - name: Write diagnostic test
+        working-directory: ci-v6
+        run: |
+          cat > tests/overflow-debug.spec.js <<'EOF'
+          import { test } from '@playwright/test'
+
+          const inspect = async (page, width, height, label) => {
+            await page.setViewportSize({ width, height })
+            await page.goto('/?quality=low')
+            await page.waitForTimeout(900)
+            const result = await page.evaluate(() => {
+              const vw = document.documentElement.clientWidth
+              const sw = document.documentElement.scrollWidth
+              const offenders = [...document.querySelectorAll('body *')].map(el => {
+                const r = el.getBoundingClientRect()
+                const cs = getComputedStyle(el)
+                return {
+                  tag: el.tagName,
+                  cls: typeof el.className === 'string' ? el.className.slice(0,120) : '',
+                  id: el.id,
+                  left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width),
+                  position: cs.position, transform: cs.transform,
+                  overflowX: cs.overflowX,
+                  text: (el.textContent || '').trim().replace(/\s+/g,' ').slice(0,80),
+                }
+              }).filter(x => x.right > vw + 1 || x.left < -1).sort((a,b) => Math.max(b.right-vw,-b.left)-Math.max(a.right-vw,-a.left)).slice(0,30)
+              return { vw, sw, overflow: sw-vw, offenders }
+            })
+            console.log(`DIAG ${label} ${JSON.stringify(result,null,2)}`)
+          }
+
+          test('report desktop and mobile overflow offenders', async ({ page }) => {
+            await inspect(page, 1440, 900, 'desktop')
+            await inspect(page, 390, 844, 'mobile')
+          })
+
+          test('report orbit scroll coordinates and button behavior', async ({ page }) => {
+            await page.setViewportSize({ width: 1440, height: 900 })
+            await page.goto('/?quality=low')
+            await page.locator('#orbit').scrollIntoViewIfNeeded()
+            await page.waitForTimeout(300)
+            const before = await page.evaluate(() => ({ y: scrollY, top: document.querySelector('#orbit')?.getBoundingClientRect().top, text: document.querySelector('.orbit-copy')?.textContent }))
+            console.log('ORBIT BEFORE', JSON.stringify(before))
+            const next = page.getByRole('button', { name: /Next season/i })
+            console.log('NEXT disabled=', await next.isDisabled())
+            if (!(await next.isDisabled())) await next.click()
+            await page.waitForTimeout(500)
+            const after = await page.evaluate(() => ({ y: scrollY, top: document.querySelector('#orbit')?.getBoundingClientRect().top, text: document.querySelector('.orbit-copy')?.textContent }))
+            console.log('ORBIT AFTER', JSON.stringify(after))
+          })
+          EOF
+      - name: Run diagnostics
+        working-directory: ci-v6
+        run: npx playwright test tests/overflow-debug.spec.js --project=chromium --workers=1
