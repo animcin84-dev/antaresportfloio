@@ -1,10 +1,81 @@
 name: V6 Spline CI Chunks
 
 on:
+  push:
+    branches: [v6-spline-ci]
   workflow_dispatch:
 
 jobs:
   verify-v6:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - run: echo "V6 source update in progress"
+      - uses: actions/checkout@v4
+
+      - name: Decode V6 source snapshot
+        run: |
+          rm -rf ci-v6
+          mkdir -p ci-v6
+          cat ci/v6-source.00.part ci/v6-source.01.part ci/v6-source.02.part ci/v6-source.03.part ci/v6-source.04.part ci/v6-source.05.part | base64 -d > /tmp/v6-source.tar.xz
+          tar -xJf /tmp/v6-source.tar.xz -C ci-v6
+          test -f ci-v6/package.json
+          test -f ci-v6/src/components/SplineHero.jsx
+          test -f ci-v6/src/i18n.jsx
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: ci-v6
+        run: npm install --no-audit --no-fund
+
+      - name: Static contract
+        working-directory: ci-v6
+        run: npm run audit:static
+
+      - name: Syntax checks
+        working-directory: ci-v6
+        run: |
+          node scripts/jsx-syntax-check.cjs
+          node --check tests/structure.spec.js
+          node --check tests/smoke.spec.js
+
+      - name: Create lightweight media fixtures for browser snapshot
+        working-directory: ci-v6
+        env:
+          JPG_FIXTURE: /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAgACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDi6KKK3P0oKKKKACiiigAooooA/9k=
+          PNG_FIXTURE: iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAALUlEQVR4nGPcopHCQEvARFPTRy0YtWDUglELRi0YtWDUglELRi0YtWDUAioCALbgAYAtmwyqAAAAAElFTkSuQmCC
+          WEBP_FIXTURE: UklGRkQAAABXRUJQVlA4IDgAAADQAgCdASogACAAPm00lkekIyIhKAgAgA2JZQAAPaOgAP7u/59snel///pNn/9Js//pNnwAAAAAAA==
+        run: |
+          printf '%s' "$JPG_FIXTURE" | base64 -d > /tmp/fixture.jpg
+          printf '%s' "$PNG_FIXTURE" | base64 -d > /tmp/fixture.png
+          printf '%s' "$WEBP_FIXTURE" | base64 -d > /tmp/fixture.webp
+          grep -Rho '/assets/[A-Za-z0-9._/-]*\.jpg' src | sort -u | while read -r url; do dst="public${url}"; mkdir -p "$(dirname "$dst")"; cp /tmp/fixture.jpg "$dst"; done
+          grep -Rho '/assets/[A-Za-z0-9._/-]*\.png' src | sort -u | while read -r url; do dst="public${url}"; mkdir -p "$(dirname "$dst")"; cp /tmp/fixture.png "$dst"; done
+          grep -Rho '/assets/[A-Za-z0-9._/-]*\.webp' src | sort -u | while read -r url; do dst="public${url}"; mkdir -p "$(dirname "$dst")"; cp /tmp/fixture.webp "$dst"; done
+          find public/assets -type f | wc -l
+
+      - name: Production build
+        working-directory: ci-v6
+        run: npm run build
+
+      - name: Install Chromium
+        working-directory: ci-v6
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser smoke
+        working-directory: ci-v6
+        run: npx playwright test --project=chromium
+
+      - name: Upload verification artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v6-verification-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: |
+            ci-v6/package-lock.json
+            ci-v6/dist
+            ci-v6/test-results
+            ci-v6/playwright-report
