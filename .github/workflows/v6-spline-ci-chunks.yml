@@ -26,9 +26,11 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Pin stable Spline runtime
+      - name: Pin portable verification dependencies
         working-directory: ci-v6
-        run: npm pkg set dependencies.@splinetool/runtime=1.12.98
+        run: |
+          npm pkg set dependencies.@splinetool/runtime=1.12.98
+          npm pkg set devDependencies.typescript=5.9.3
 
       - name: Install dependencies
         working-directory: ci-v6
