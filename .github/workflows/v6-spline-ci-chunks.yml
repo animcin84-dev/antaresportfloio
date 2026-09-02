@@ -25,6 +25,10 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Pin stable Spline runtime
+        working-directory: ci-v6
+        run: npm pkg set dependencies.@splinetool/runtime=1.12.98
+
       - name: Install dependencies
         working-directory: ci-v6
         run: npm install --no-audit --no-fund
