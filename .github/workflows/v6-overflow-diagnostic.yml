@@ -43,46 +43,48 @@ jobs:
             await page.goto('/?quality=low')
             await page.waitForTimeout(900)
             const result = await page.evaluate(() => {
-              const vw = document.documentElement.clientWidth
-              const sw = document.documentElement.scrollWidth
-              const offenders = [...document.querySelectorAll('body *')].map(el => {
+              const de = document.documentElement
+              const body = document.body
+              const root = document.querySelector('#root')
+              const nodes = [de, body, root, ...document.querySelectorAll('body *')].filter(Boolean)
+              const shape = el => {
                 const r = el.getBoundingClientRect()
                 const cs = getComputedStyle(el)
                 return {
                   tag: el.tagName,
                   cls: typeof el.className === 'string' ? el.className.slice(0,120) : '',
                   id: el.id,
+                  clientWidth: el.clientWidth,
+                  scrollWidth: el.scrollWidth,
+                  delta: el.scrollWidth - el.clientWidth,
                   left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width),
-                  position: cs.position, transform: cs.transform,
-                  overflowX: cs.overflowX,
+                  position: cs.position, transform: cs.transform, overflowX: cs.overflowX,
                   text: (el.textContent || '').trim().replace(/\s+/g,' ').slice(0,80),
                 }
-              }).filter(x => x.right > vw + 1 || x.left < -1).sort((a,b) => Math.max(b.right-vw,-b.left)-Math.max(a.right-vw,-a.left)).slice(0,30)
-              return { vw, sw, overflow: sw-vw, offenders }
+              }
+              const outward = nodes.map(shape).filter(x => x.right > de.clientWidth + 1 || x.left < -1)
+                .sort((a,b) => Math.max(b.right-de.clientWidth,-b.left)-Math.max(a.right-de.clientWidth,-a.left)).slice(0,30)
+              const internal = nodes.map(shape).filter(x => x.delta > 1)
+                .sort((a,b) => b.delta-a.delta).slice(0,40)
+              const pseudo = (el, selector) => {
+                const s = getComputedStyle(el, selector)
+                return { content:s.content, position:s.position, left:s.left, right:s.right, width:s.width, transform:s.transform }
+              }
+              return {
+                vw: de.clientWidth,
+                sw: de.scrollWidth,
+                overflow: de.scrollWidth-de.clientWidth,
+                body: shape(body), root: shape(root),
+                outward, internal,
+                bodyBefore:pseudo(body,'::before'), bodyAfter:pseudo(body,'::after')
+              }
             })
             console.log(`DIAG ${label} ${JSON.stringify(result,null,2)}`)
           }
 
-          test('report patched desktop and mobile overflow offenders', async ({ page }) => {
+          test('report patched internal scrollWidth owners', async ({ page }) => {
             await inspect(page, 1440, 900, 'desktop')
             await inspect(page, 390, 844, 'mobile')
-          })
-
-          test('report patched orbit scroll coordinates and button behavior', async ({ page }) => {
-            await page.setViewportSize({ width: 1440, height: 900 })
-            await page.goto('/?quality=low')
-            await page.locator('#orbit').scrollIntoViewIfNeeded()
-            await page.waitForTimeout(350)
-            const before = await page.evaluate(() => ({ y: scrollY, top: document.querySelector('#orbit')?.getBoundingClientRect().top, status: document.querySelector('.orbit-copy > span')?.textContent }))
-            console.log('ORBIT BEFORE', JSON.stringify(before))
-            const ordinal = Number((before.status || '').match(/^(\d{2})/)?.[1] || 1)
-            const name = ordinal < 4 ? /Next season/i : /Previous season/i
-            const control = page.getByRole('button', { name })
-            console.log('CONTROL=', ordinal < 4 ? 'NEXT' : 'PREVIOUS', 'disabled=', await control.isDisabled())
-            if (!(await control.isDisabled())) await control.click()
-            await page.waitForTimeout(1000)
-            const after = await page.evaluate(() => ({ y: scrollY, top: document.querySelector('#orbit')?.getBoundingClientRect().top, status: document.querySelector('.orbit-copy > span')?.textContent }))
-            console.log('ORBIT AFTER', JSON.stringify(after))
           })
           EOF
       - name: Run diagnostics
