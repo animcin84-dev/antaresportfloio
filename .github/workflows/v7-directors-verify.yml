@@ -1,0 +1,95 @@
+name: Verify V7 Directors Cut
+
+on:
+  push:
+    branches: [v7-directors-ci]
+    paths:
+      - 'ci-v7/**'
+      - '.github/workflows/v7-directors-verify.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-v7:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decode V7 source
+        run: |
+          rm -rf ci-v7-work
+          mkdir -p ci-v7-work
+          cat ci-v7/v7-source.00.part ci-v7/v7-source.01.part ci-v7/v7-source.02.part ci-v7/v7-source.03.part ci-v7/v7-source.04.part ci-v7/v7-source.05.part | base64 -d > /tmp/v7-source.tar.xz
+          tar -xJf /tmp/v7-source.tar.xz -C ci-v7-work
+          test -f ci-v7-work/src/components/MemorySpine.jsx
+          test -f ci-v7-work/src/components/MachineChapter.jsx
+          test -f ci-v7-work/src/components/FlightRecorder.jsx
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: ci-v7-work
+        run: npm install --no-audit --no-fund
+
+      - name: V7 static contract
+        working-directory: ci-v7-work
+        run: npm run audit:static
+
+      - name: Test syntax
+        working-directory: ci-v7-work
+        run: |
+          node --check tests/structure.spec.js
+          node --check tests/smoke.spec.js
+
+      - name: Create lightweight media fixtures
+        working-directory: ci-v7-work
+        env:
+          JPG_FIXTURE: /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAgACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDi6KKK3P0oKKKKACiiigAooooA/9k=
+          PNG_FIXTURE: iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAALUlEQVR4nGPcopHCQEvARFPTRy0YtWDUglELRi0YtWDUglELRi0YtWDUAioCALbgAYAtmwyqAAAAAElFTkSuQmCC
+          WEBP_FIXTURE: UklGRkQAAABXRUJQVlA4IDgAAADQAgCdASogACAAPm00lkekIyIhKAgAgA2JZQAAPaOgAP7u/59snel///pNn/9Js//pNnwAAAAAAA==
+        run: |
+          printf '%s' "$JPG_FIXTURE" | base64 -d > /tmp/fixture.jpg
+          printf '%s' "$PNG_FIXTURE" | base64 -d > /tmp/fixture.png
+          printf '%s' "$WEBP_FIXTURE" | base64 -d > /tmp/fixture.webp
+          grep -Rho '/assets/[A-Za-z0-9._/-]*\.jpg' src | sort -u | while read -r url; do dst="public${url}"; mkdir -p "$(dirname "$dst")"; cp /tmp/fixture.jpg "$dst"; done
+          grep -Rho '/assets/[A-Za-z0-9._/-]*\.png' src | sort -u | while read -r url; do dst="public${url}"; mkdir -p "$(dirname "$dst")"; cp /tmp/fixture.png "$dst"; done
+          grep -Rho '/assets/[A-Za-z0-9._/-]*\.webp' src | sort -u | while read -r url; do dst="public${url}"; mkdir -p "$(dirname "$dst")"; cp /tmp/fixture.webp "$dst"; done
+
+      - name: Production build
+        working-directory: ci-v7-work
+        run: npm run build
+
+      - name: Performance budget
+        working-directory: ci-v7-work
+        run: npm run check:budget
+
+      - name: Install Chromium
+        working-directory: ci-v7-work
+        run: npx playwright install --with-deps chromium
+
+      - name: Chromium browser QA
+        working-directory: ci-v7-work
+        run: npx playwright test --project=chromium
+
+      - name: Upload verified V7 source
+        uses: actions/upload-artifact@v4
+        with:
+          name: v7-directors-verification-${{ github.run_id }}
+          if-no-files-found: error
+          path: |
+            ci-v7-work/package-lock.json
+            ci-v7-work/dist
+            ci-v7-work/test-results
+            ci-v7-work/playwright-report
+            ci-v7-work/src
+            ci-v7-work/scripts
+            ci-v7-work/tests
+            ci-v7-work/package.json
+            ci-v7-work/vite.config.js
+            ci-v7-work/playwright.config.js
+            ci-v7-work/index.html
+            ci-v7-work/public/robots.txt
+            ci-v7-work/public/site.webmanifest
+            ci-v7-work/public/sitemap.xml
