@@ -27,9 +27,12 @@ jobs:
         run: |
           cd ci-v6
           patch -p1 < ../ci/v6-final-fixes.patch
+          patch -p1 < ../ci/v6-layout-fixes.patch
           test -f src/lib/smoothScroll.js
           grep -q 'scrollToPosition' src/components/MissionOrbit.jsx
           grep -q 'minmax(0,1fr)' src/styles.css
+          grep -q 'width:72vw;right:4vw' src/styles.css
+          grep -q "match(/^(\\d{2})/)" tests/smoke.spec.js
 
       - uses: actions/setup-node@v4
         with:
