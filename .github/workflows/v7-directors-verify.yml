@@ -19,7 +19,7 @@ jobs:
         run: |
           rm -rf ci-v7-work
           mkdir -p ci-v7-work
-          cat ci-v7/v7-source.00.part ci-v7/v7-source.01.part ci-v7/v7-source.02.part ci-v7/v7-source.03.part ci-v7/v7-source.04.part ci-v7/v7-source.05.part | base64 -d > /tmp/v7-source.tar.xz
+          cat ci-v7/v7-source.00.part ci-v7/v7-source.01.part ci-v7/v7-source.02.part ci-v7/v7-source.03a.part ci-v7/v7-source.03b.part ci-v7/v7-source.03c.part ci-v7/v7-source.03d.part ci-v7/v7-source.04.part ci-v7/v7-source.05.part | base64 -d > /tmp/v7-source.tar.xz
           tar -xJf /tmp/v7-source.tar.xz -C ci-v7-work
           test -f ci-v7-work/src/components/MemorySpine.jsx
           test -f ci-v7-work/src/components/MachineChapter.jsx
@@ -46,7 +46,7 @@ jobs:
       - name: Create lightweight media fixtures
         working-directory: ci-v7-work
         env:
-          JPG_FIXTURE: /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAgACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDi6KKK3P0oKKKKACiiigAooooA/9k=
+          JPG_FIXTURE: /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAgACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDi6KKK3P0oKKKKACiiigAooooA/9k=
           PNG_FIXTURE: iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAALUlEQVR4nGPcopHCQEvARFPTRy0YtWDUglELRi0YtWDUglELRi0YtWDUAioCALbgAYAtmwyqAAAAAElFTkSuQmCC
           WEBP_FIXTURE: UklGRkQAAABXRUJQVlA4IDgAAADQAgCdASogACAAPm00lkekIyIhKAgAgA2JZQAAPaOgAP7u/59snel///pNn/9Js//pNnwAAAAAAA==
         run: |
