@@ -39,34 +39,60 @@ jobs:
           grep -E '(^|/)package.json$' /tmp/source-files.txt
           grep -E '(^|/)src/App.jsx$' /tmp/source-files.txt
           grep -E '(^|/)\.github/workflows/v7-quality.yml$' /tmp/source-files.txt
+          mkdir -p recovered
+          cp /tmp/v7-source.tar.gz recovered/
+          cp /tmp/source-files.txt recovered/
 
-      - name: Reconstruct media archive
+      - name: Diagnose and reconstruct media archive
         shell: bash
         run: |
           set -euo pipefail
-          {
-            for f in ci/v7-bootstrap/media.{00..13}.b64; do cat "$f"; done
-            for f in ci/v7-bootstrap/t7.{000..029}.b64; do cat "$f"; done
-          } | base64 -d > /tmp/v7-media.tar.gz
-          echo 'MEDIA_SHA256:'
-          sha256sum /tmp/v7-media.tar.gz
+          python - <<'PY'
+          from pathlib import Path
+          import base64, re, sys, hashlib
+
+          paths = [Path(f'ci/v7-bootstrap/media.{i:02d}.b64') for i in range(14)]
+          paths += [Path(f'ci/v7-bootstrap/t7.{i:03d}.b64') for i in range(30)]
+          chunks = []
+          for p in paths:
+              s = p.read_text()
+              chunks.append(s)
+              bad = [(i, c, ord(c)) for i, c in enumerate(s) if c not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\r\n\t ']
+              eq = [i for i,c in enumerate(s) if c == '=']
+              print(f'{p.name}: len={len(s)} bad={bad[:3]} eq={eq[:5]} first={s[:8]!r} last={s[-8:]!r}')
+          data = ''.join(chunks)
+          compact = re.sub(r'\s+', '', data)
+          print('MEDIA_B64_TOTAL_RAW', len(data))
+          print('MEDIA_B64_TOTAL_COMPACT', len(compact), 'mod4', len(compact)%4)
+          bad = [(i, c, ord(c)) for i,c in enumerate(compact) if c not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=']
+          print('MEDIA_BAD_GLOBAL', bad[:10])
+          eq = [i for i,c in enumerate(compact) if c == '=']
+          print('MEDIA_EQ_POSITIONS', eq[:20], 'count', len(eq), 'tail', eq[-10:])
+          try:
+              raw = base64.b64decode(compact, validate=True)
+          except Exception as e:
+              print('MEDIA_BASE64_ERROR', repr(e))
+              sys.exit(2)
+          Path('/tmp/v7-media.tar.gz').write_bytes(raw)
+          print('MEDIA_BYTES', len(raw))
+          print('MEDIA_SHA256', hashlib.sha256(raw).hexdigest())
+          PY
           gzip -t /tmp/v7-media.tar.gz
           tar -tzf /tmp/v7-media.tar.gz > /tmp/media-files.txt
           echo "media files: $(wc -l < /tmp/media-files.txt)"
           cat /tmp/media-files.txt
           test "$(grep -c '\.avif$' /tmp/media-files.txt)" -eq 7
+          cp /tmp/v7-media.tar.gz recovered/
+          cp /tmp/media-files.txt recovered/
 
       - name: Package recovered archives
+        if: always()
         shell: bash
         run: |
-          mkdir -p recovered
-          cp /tmp/v7-source.tar.gz recovered/
-          cp /tmp/v7-media.tar.gz recovered/
-          cp /tmp/source-files.txt recovered/
-          cp /tmp/media-files.txt recovered/
-          sha256sum recovered/* > recovered/SHA256SUMS.txt
+          if [ -d recovered ]; then sha256sum recovered/* > recovered/SHA256SUMS.txt || true; fi
 
       - name: Upload recovered archives
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v7-recovered-bootstrap
