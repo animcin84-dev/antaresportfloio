@@ -1,0 +1,67 @@
+name: V7 Apply Browser Root Fixes
+
+on:
+  push:
+    branches: [v7-engineering-memory]
+    paths: ['.github/workflows/v7-browser-fix.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Patch MACHINE grid and Recorder snap
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/styles.css')
+          s = p.read_text()
+          pairs = [
+            ('.machine-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:5vw;align-items:start}',
+             '.machine-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:5vw;align-items:start;min-width:0}'),
+            ('.machine-revisions article{min-height:86vh;',
+             '.machine-revisions{min-width:0}.machine-revisions article{min-width:0;min-height:86vh;'),
+            ('.machine-revisions button{width:100%;display:grid;grid-template-columns:44px 1fr auto;',
+             '.machine-revisions button{width:100%;min-width:0;display:grid;grid-template-columns:44px minmax(0,1fr) auto;'),
+            ('.machine-revisions button strong{font-family:var(--display);',
+             '.machine-revisions button strong{min-width:0;font-family:var(--display);'),
+            ('.machine-revisions button{grid-template-columns:24px 1fr}',
+             '.machine-revisions button{grid-template-columns:24px minmax(0,1fr) auto}'),
+          ]
+          for old, new in pairs:
+            if old not in s:
+              raise SystemExit(f'Expected CSS pattern missing: {old}')
+            s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          p = Path('src/components/FlightRecorder.jsx')
+          s = p.read_text()
+          old = "snap: { snapTo: 1 / (recordYears.length - 1), duration: { min: .12, max: .3 }, delay: .04 },"
+          new = "snap: { snapTo: 1 / (recordYears.length - 1), duration: { min: .12, max: .3 }, delay: .04, inertia: false },"
+          if old not in s:
+            raise SystemExit('Expected Flight Recorder snap config missing')
+          p.write_text(s.replace(old, new, 1))
+          PY
+          node scripts/phase-contract.mjs
+          node scripts/jsx-syntax-check.cjs
+          git diff --check
+          git diff -- src/styles.css src/components/FlightRecorder.jsx
+      - name: Commit source fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/styles.css src/components/FlightRecorder.jsx
+          git commit -m 'Fix V7 Chromium overflow and recorder navigation'
+          git push origin HEAD:v7-engineering-memory
