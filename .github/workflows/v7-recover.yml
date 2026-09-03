@@ -22,14 +22,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat \
-            ci/v7-bootstrap/source.00.b64 \
-            ci/v7-bootstrap/source.01.b64 \
-            ci/v7-bootstrap/source.02.b64 \
-            ci/v7-bootstrap/source.03a.b64 \
-            ci/v7-bootstrap/source.03b.b64 \
-            ci/v7-bootstrap/source.04.b64 \
-            | base64 -d > /tmp/v7-source.tar.gz
+          {
+            cat ci/v7-bootstrap/source.00a.b64
+            tail -c +8001 ci/v7-bootstrap/source.00.b64
+            cat ci/v7-bootstrap/source.01.b64
+            cat ci/v7-bootstrap/source.02.b64
+            cat ci/v7-bootstrap/source.03a.b64
+            cat ci/v7-bootstrap/source.03b.b64
+            cat ci/v7-bootstrap/source.04.b64
+          } | base64 -d > /tmp/v7-source.tar.gz
           echo 'SOURCE_SHA256:'
           sha256sum /tmp/v7-source.tar.gz
           gzip -t /tmp/v7-source.tar.gz
