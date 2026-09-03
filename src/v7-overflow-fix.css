@@ -7,6 +7,13 @@
   transform:scaleY(calc(1.06 - var(--mission-progress,0)*.035));
 }
 
+@media (min-width:901px){
+  .continuity-legacy,
+  .continuity-current{
+    font-size:clamp(86px,14vw,220px);
+  }
+}
+
 @media (max-width:900px){
   .machine-heading{
     grid-template-columns:minmax(0,1fr);
