@@ -1,0 +1,74 @@
+name: V7 Recover Bootstrap Archives
+
+on:
+  push:
+    branches: [v7-engineering-memory]
+    paths:
+      - '.github/workflows/v7-recover.yml'
+      - 'ci/v7-bootstrap/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reconstruct source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat \
+            ci/v7-bootstrap/source.00.b64 \
+            ci/v7-bootstrap/source.01.b64 \
+            ci/v7-bootstrap/source.02.b64 \
+            ci/v7-bootstrap/source.03a.b64 \
+            ci/v7-bootstrap/source.03b.b64 \
+            ci/v7-bootstrap/source.04.b64 \
+            | base64 -d > /tmp/v7-source.tar.gz
+          echo 'SOURCE_SHA256:'
+          sha256sum /tmp/v7-source.tar.gz
+          gzip -t /tmp/v7-source.tar.gz
+          tar -tzf /tmp/v7-source.tar.gz > /tmp/source-files.txt
+          echo "source files: $(wc -l < /tmp/source-files.txt)"
+          grep -E '(^|/)package.json$' /tmp/source-files.txt
+          grep -E '(^|/)src/App.jsx$' /tmp/source-files.txt
+          grep -E '(^|/)\.github/workflows/v7-quality.yml$' /tmp/source-files.txt
+
+      - name: Reconstruct media archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            for f in ci/v7-bootstrap/media.{00..13}.b64; do cat "$f"; done
+            for f in ci/v7-bootstrap/t7.{000..029}.b64; do cat "$f"; done
+          } | base64 -d > /tmp/v7-media.tar.gz
+          echo 'MEDIA_SHA256:'
+          sha256sum /tmp/v7-media.tar.gz
+          gzip -t /tmp/v7-media.tar.gz
+          tar -tzf /tmp/v7-media.tar.gz > /tmp/media-files.txt
+          echo "media files: $(wc -l < /tmp/media-files.txt)"
+          cat /tmp/media-files.txt
+          test "$(grep -c '\.avif$' /tmp/media-files.txt)" -eq 7
+
+      - name: Package recovered archives
+        shell: bash
+        run: |
+          mkdir -p recovered
+          cp /tmp/v7-source.tar.gz recovered/
+          cp /tmp/v7-media.tar.gz recovered/
+          cp /tmp/source-files.txt recovered/
+          cp /tmp/media-files.txt recovered/
+          sha256sum recovered/* > recovered/SHA256SUMS.txt
+
+      - name: Upload recovered archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: v7-recovered-bootstrap
+          path: recovered/
+          if-no-files-found: error
+          retention-days: 1
