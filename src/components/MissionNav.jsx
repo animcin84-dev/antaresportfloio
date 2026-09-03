@@ -1,72 +1,82 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
+import { useI18n } from '../i18n'
 
 const chapters = [
-  ['01', 'MANIFESTO', '#manifesto'],
-  ['02', 'IDENTITY', '#identity'],
+  ['00', 'SIGNAL', '#top'],
+  ['01', 'CONTINUITY', '#continuity'],
+  ['02', 'MEMORY', '#memory'],
+  ['03', 'MACHINE', '#machine'],
   ['04', 'MISSION', '#mission'],
-  ['05', 'ENGINEERING', '#engineering'],
-  ['06', 'ORBIT', '#orbit'],
-  ['07', 'RECORD', '#record'],
-  ['08', 'EVIDENCE', '#evidence'],
-  ['09', 'TEAM', '#team'],
+  ['05', 'FLIGHT RECORDER', '#record'],
+  ['06', 'PEOPLE', '#team'],
+  ['07', 'TRANSMISSION', '#transmission'],
 ]
 
 export default function MissionNav() {
   const [open, setOpen] = useState(false)
-  const [active, setActive] = useState('MANIFESTO')
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const update = () => setVisible(scrollY > innerHeight * .55)
-    update()
-    addEventListener('scroll', update, { passive: true })
-    return () => removeEventListener('scroll', update)
-  }, [])
+  const [active, setActive] = useState('SIGNAL')
+  const buttonRef = useRef()
+  const dialogRef = useRef()
+  const { t } = useI18n()
 
   useEffect(() => {
     const nodes = chapters.map(([, name, selector]) => [name, document.querySelector(selector)]).filter(([, node]) => node)
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const found = nodes.find(([, node]) => node === entry.target)
-          if (found) setActive(found[0])
-        }
+        if (!entry.isIntersecting) return
+        const match = nodes.find(([, node]) => node === entry.target)
+        if (match) setActive(match[0])
       })
-    }, { rootMargin: '-38% 0px -52% 0px', threshold: 0 })
+    }, { rootMargin: '-38% 0px -50% 0px' })
     nodes.forEach(([, node]) => observer.observe(node))
     return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
-    const onKey = event => { if (event.key === 'Escape') setOpen(false) }
+    if (!open) return
+    const node = dialogRef.current
+    const focusable = [...node.querySelectorAll('button,a[href]')]
+    focusable[0]?.focus()
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = event => {
+      if (event.key === 'Escape') { setOpen(false); requestAnimationFrame(() => buttonRef.current?.focus()) }
+      if (event.key === 'Tab' && focusable.length) {
+        const first = focusable[0], last = focusable[focusable.length - 1]
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+      }
+    }
     addEventListener('keydown', onKey)
-    return () => { document.body.style.overflow = ''; removeEventListener('keydown', onKey) }
+    return () => { removeEventListener('keydown', onKey); document.body.style.overflow = previousOverflow }
   }, [open])
 
   const go = selector => {
     setOpen(false)
-    requestAnimationFrame(() => document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    requestAnimationFrame(() => {
+      document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      buttonRef.current?.focus({ preventScroll: true })
+    })
   }
 
   return (
     <>
-      <motion.button className={`mission-index-button ${visible || open ? 'is-visible' : ''}`} type="button" aria-expanded={open} aria-controls="mission-index" onClick={() => setOpen(value => !value)} whileTap={{ scale: .94 }}>
-        <span>{open ? 'CLOSE' : 'INDEX'}</span><i><b /></i><small>{active}</small>
-      </motion.button>
+      <button ref={buttonRef} className="index-button" type="button" aria-expanded={open} aria-controls="mission-index" onClick={() => setOpen(value => !value)} data-cursor={open ? 'CLOSE' : 'INDEX'}>
+        <span>{open ? t('close') : t('index')}</span><i />
+      </button>
       <AnimatePresence>
         {open && (
-          <motion.div id="mission-index" className="mission-index" role="dialog" aria-modal="true" aria-label="ABAI BOL mission index" initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0% 0 0 0)' }} exit={{ clipPath: 'inset(0 0 100% 0)' }} transition={{ duration: .7, ease: [.16, 1, .3, 1] }}>
-            <div className="mission-index-top"><span>ABAI BOL / INDEX</span><span>FORMERLY ANTARES · ALMATY</span></div>
-            <nav aria-label="Mission chapters">
-              {chapters.map(([number, name, selector], i) => (
-                <motion.button type="button" key={name} className={active === name ? 'active' : ''} onClick={() => go(selector)} initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .08 + i * .045, duration: .55, ease: [.16, 1, .3, 1] }}>
-                  <span>{number}</span><strong>{name}</strong><i>↘</i>
-                </motion.button>
-              ))}
-            </nav>
-            <div className="mission-index-foot"><span>BUILD / ITERATE / COMPETE</span><span>ESC TO CLOSE</span></div>
+          <motion.div ref={dialogRef} id="mission-index" className="mission-index mission-index--v7" role="dialog" aria-modal="true" aria-label="ABAI BOL chapter index" initial={{ clipPath: 'inset(100% 0 0 0)' }} animate={{ clipPath: 'inset(0% 0 0 0)' }} exit={{ clipPath: 'inset(0 0 100% 0)' }} transition={{ duration: .55, ease: [.16, 1, .3, 1] }}>
+            <div className="mission-index-top"><span>ABAI BOL / ENGINEERING MEMORY</span><span>ALMATY · KAZAKHSTAN</span></div>
+            <div className="mission-index-layout mission-index-layout--v7">
+              <nav aria-label="Chapters">
+                {chapters.map(([number, name, selector]) => (
+                  <button type="button" key={name} className={active === name ? 'active' : ''} onClick={() => go(selector)}><span>{number}</span><strong>{name}</strong><i>↘</i></button>
+                ))}
+              </nav>
+            </div>
+            <div className="mission-index-foot"><span>EVERY MACHINE CARRIES THE DECISIONS OF THE ONE BEFORE IT.</span><span>ESC TO CLOSE</span></div>
           </motion.div>
         )}
       </AnimatePresence>

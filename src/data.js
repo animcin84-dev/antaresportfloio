@@ -1,58 +1,180 @@
-export const EVIDENCE_DRIVE_URL = 'https://drive.google.com/drive/folders/1F8peRnkwYX_1QZd7oxoTGL5CsWw1Fm9V'
+export const EVIDENCE_DRIVE_URL =
+  'https://drive.google.com/drive/folders/1F8peRnkwYX_1QZd7oxoTGL5CsWw1Fm9V'
 
-// Final team-provided award list supplied in the project handoff on 2026-09-01.
-// It is intentionally kept distinct from older scraped/public-result drafts.
-export const awards = [
-  { date: '2023', event: 'ALMATY TECHCUP', location: 'ALMATY', result: 'CONTROL AWARD · 2ND PLACE' },
-  { date: '2023', event: 'TAMOS FIRST · REGIONAL QUALIFIER', location: 'KAZAKHSTAN', result: 'CONTROL AWARD · WINNER' },
-  { date: '2024', event: 'NUSANTARA REGIONAL', location: 'INDONESIA', result: 'FINALIST ALLIANCE · CAPTAIN' },
-  { date: '2024', event: 'NUSANTARA REGIONAL', location: 'INDONESIA', result: 'THINK AWARD · WINNER' },
-  { date: '2024', event: 'NUSANTARA REGIONAL', location: 'INDONESIA', result: 'CONTROL AWARD · 3RD PLACE' },
-  { date: '2024', event: 'CENTRAL ASIA FIRST CHAMPIONSHIP', location: 'KAZAKHSTAN', result: 'THINK AWARD · 3RD PLACE' },
-  { date: '2024', event: 'CENTRAL ASIA FIRST CHAMPIONSHIP', location: 'KAZAKHSTAN', result: 'PROMOTE AWARD · 3RD PLACE' },
-  { date: '2024', event: 'CENTRAL ASIA FIRST CHAMPIONSHIP', location: 'KAZAKHSTAN', result: 'DESIGN AWARD · WINNER' },
-  { date: '2024', event: 'ALMATY REGIONAL FIRST', location: 'ALMATY', result: 'THINK AWARD · 2ND PLACE' },
-  { date: '2025', event: 'TAMOS FIRST · OFF-SEASON', location: 'KAZAKHSTAN', result: 'INNOVATE AWARD · WINNER' },
-  { date: '2025', event: 'ZHYLANDY REGIONAL FIRST', location: 'KAZAKHSTAN', result: 'DESIGN AWARD · WINNER' },
-  { date: '2025', event: 'BISHKEK REGIONAL FIRST', location: 'BISHKEK', result: 'REACH AWARD · WINNER' },
-  { date: '2025', event: 'FIRST GLOBAL CHALLENGE KAZAKHSTAN', location: 'KAZAKHSTAN', result: 'INNOVATOR AWARD · 3RD PLACE' },
-  { date: '2025', event: 'FIRST GLOBAL CHALLENGE', location: 'FGC', result: 'WINNING ALLIANCE AWARD · WINNER' },
-  { date: '2025', event: 'FIRST GLOBAL CHALLENGE', location: 'FGC', result: 'INTERNATIONAL UNITY AWARD · 2ND PLACE' },
-  { date: '2025', event: 'FIRST GLOBAL CHALLENGE', location: 'FGC', result: 'SKILLS CHALLENGE · 3RD PLACE' },
-  { date: '2026', event: 'DARYN QUALIFIER', location: 'KAZAKHSTAN', result: 'SUSTAIN AWARD · WINNER' },
-  { date: '2026', event: 'LEPSI FEST', location: 'KAZAKHSTAN', result: 'CONNECT AWARD · 2ND PLACE' },
+export const SPLINE_SCENE_URL =
+  'https://prod.spline.design/bpyixqvv4QLqc5Hj/scene.splinecode'
+
+export const memoryChapters = [
+  {
+    year: '2023',
+    title: 'FIRST SIGNAL',
+    label: 'ANTARES / EARLY BUILD',
+    image: '/assets/v7/robot-prototype.avif',
+    copy: 'Build, test, record, revise. The archive begins with the method.'
+  },
+  {
+    year: '2024',
+    title: 'ALMATY → DEPOK',
+    label: 'NUSANTARA / INDONESIA',
+    image: '/assets/v7/team-indonesia-field.avif',
+    copy: 'International competition becomes part of the team’s engineering memory.'
+  },
+  {
+    year: '2025',
+    title: 'THE SYSTEM MATURES',
+    label: 'BISHKEK / ALMATY / FGC',
+    image: '/assets/v7/robot-into-deep.avif',
+    copy: 'More events, new machines and the same pressure-tested habit of iteration.'
+  },
+  {
+    year: '2026',
+    title: 'ABAI BOL',
+    label: 'SAME TEAM / NEW IDENTITY',
+    image: '/assets/v7/abai-bol-logo.avif',
+    copy: 'The name changes. The accumulated work remains visible.'
+  }
 ]
 
-export const layers = {
-  mechanical: {
+export const robotVersions = [
+  {
     index: '01',
-    title: 'MECHANICAL',
-    copy: 'Structure converts intent into repeatable movement. Chassis, mechanisms, gearing and geometry are judged by one standard: can the robot execute the same action under match pressure?',
-    tags: ['LOAD PATHS', 'MOTION ENVELOPES', 'SERVICEABILITY'],
+    title: 'PROTOTYPE',
+    image: '/assets/v7/robot-prototype.avif',
+    note: 'A physical iteration preserved before the machine became competition-ready.'
   },
-  control: {
+  {
     index: '02',
-    title: 'CONTROL',
-    copy: 'Every actuator becomes useful only when the driver and software can command it predictably. Control design connects sensors, motors, feedback and human input into one responsive system.',
-    tags: ['SENSORS', 'ACTUATORS', 'FEEDBACK'],
+    title: 'COMPETITION BUILD',
+    image: '/assets/v7/robot-centerstage.avif',
+    note: 'An exposed mechanical architecture recorded in the team photo archive.'
   },
-  software: {
+  {
     index: '03',
-    title: 'SOFTWARE',
-    copy: 'Autonomous routines, vision, telemetry and state logic turn mechanical possibility into repeatable decisions. Software is treated as an engineering subsystem, not a last-minute layer.',
-    tags: ['AUTONOMY', 'VISION', 'STATE'],
+    title: 'NEXT REVISION',
+    image: '/assets/v7/robot-into-deep.avif',
+    note: 'A later robot iteration with a visibly different packaging and mechanism layout.'
   },
-  iteration: {
+  {
     index: '04',
-    title: 'ITERATION',
-    copy: 'The first version is evidence, not the answer. We prototype, fail, measure, rebuild and document the delta so every revision has a reason to exist.',
-    tags: ['FAIL', 'MEASURE', 'REBUILD'],
-  },
-}
+    title: 'CAD MEMORY',
+    image: '/assets/v7/cad-black-purple.avif',
+    note: 'Design intent preserved digitally before it becomes hardware.'
+  }
+]
 
 export const seasons = [
-  { year: '2023—24', game: 'CENTER\nSTAGE', note: 'The international breakout: TechCup and Tamos momentum, then a finalist alliance in Indonesia with Think and Control recognition.', result: 'INDONESIA · THINK WINNER' },
-  { year: '2024—25', game: 'INTO THE\nDEEP', note: 'Design and engineering recognition continued through Almaty, Central Asia, Zhylandy and Tamos off-season competition.', result: 'DESIGN / INNOVATE' },
-  { year: '2025—26', game: 'DECODE', note: 'Bishkek Reach, Daryn Sustain, Lepsi Connect and FIRST Global Challenge results expanded the record beyond one event format.', result: 'REACH / SUSTAIN / FGC' },
-  { year: '2026—27', game: 'ABAI BOL', note: 'The team enters the next mission under a new public identity while keeping the ANTARES engineering history visible.', result: 'NEXT BUILD / OPEN', next: true },
+  {
+    year: '2023',
+    label: 'FOUNDATION',
+    image: '/assets/v7/robot-prototype.avif',
+    result: 'CONTROL AWARD — WINNER',
+    note: 'Tamos FIRST Championship Regional Qualifier: Control Award Winner. Almaty TechCup: Control Award 2nd Place.'
+  },
+  {
+    year: '2024',
+    label: 'INTERNATIONAL',
+    image: '/assets/v7/team-indonesia-field.avif',
+    result: 'THINK AWARD — WINNER',
+    note: 'Nusantara Regional: Finalist Alliance Captain, Think Award Winner, Control Award 3rd Place.'
+  },
+  {
+    year: '2025',
+    label: 'EXPANSION',
+    image: '/assets/v7/robot-into-deep.avif',
+    result: 'MULTIPLE AWARD WINS',
+    note: 'Bishkek Reach Award Winner, Zhylandy Design Award Winner and Tamos Off-season Innovate Award Winner.'
+  },
+  {
+    year: '2026',
+    label: 'CONTINUITY',
+    image: '/assets/v7/team-outdoors.avif',
+    result: 'SUSTAIN AWARD — WINNER',
+    note: 'Daryn Qualifier: Sustain Award Winner. The archive continues under the ABAI BOL identity.'
+  }
 ]
+
+export const heroAchievements = [
+  {
+    year: '2024',
+    event: 'NUSANTARA REGIONAL · INDONESIA',
+    result: 'THINK AWARD — WINNER',
+    sub: 'FINALIST ALLIANCE CAPTAIN · CONTROL AWARD 3RD',
+    image: '/assets/v7/team-indonesia-field.avif'
+  },
+  {
+    year: '2025',
+    event: 'BISHKEK REGIONAL FIRST CHAMPIONSHIP',
+    result: 'REACH AWARD — WINNER',
+    sub: 'TEAM-PROVIDED RECORD',
+    image: '/assets/v7/robot-into-deep.avif'
+  },
+  {
+    year: '2026',
+    event: 'DARYN QUALIFIER',
+    result: 'SUSTAIN AWARD — WINNER',
+    sub: 'TEAM-PROVIDED RECORD',
+    image: '/assets/v7/team-outdoors.avif'
+  },
+  {
+    year: '—',
+    event: 'LEPSI FEST',
+    result: 'CONNECT AWARD — 2ND PLACE',
+    sub: 'TEAM-PROVIDED RECORD',
+    image: '/assets/v7/team-indonesia-field.avif'
+  },
+  {
+    year: 'FGC',
+    event: 'FIRST GLOBAL CHALLENGE',
+    result: 'WINNING ALLIANCE — WINNER',
+    sub: 'INTERNATIONAL UNITY 2ND · SKILLS CHALLENGE 3RD',
+    image: null
+  }
+]
+
+export const awards = [
+  ['2026', 'Daryn Qualifier', 'Sustain Award — Winner'],
+  ['2025', 'Tamos FIRST Championship · Off-season', 'Innovate Award — Winner'],
+  ['2025', 'Zhylandy Regional FIRST Championship', 'Design Award — Winner'],
+  ['2025', 'Bishkek Regional FIRST Championship', 'Reach Award — Winner'],
+  ['2025', 'FIRST Global Challenge Kazakhstan', 'Innovator Award — 3rd Place'],
+  ['2024', 'Nusantara Regional FIRST Championship · Indonesia', 'Finalist Alliance Captain'],
+  ['2024', 'Nusantara Regional FIRST Championship · Indonesia', 'Think Award — Winner'],
+  ['2024', 'Nusantara Regional FIRST Championship · Indonesia', 'Control Award — 3rd Place'],
+  ['2024', 'Central Asia FIRST Championship', 'Think Award — 3rd Place'],
+  ['2024', 'Central Asia FIRST Championship', 'Promote Award — 3rd Place'],
+  ['2024', 'Central Asia FIRST Championship', 'Design Award — Winner'],
+  ['2024', 'Almaty Regional FIRST Championship', 'Think Award — 2nd Place'],
+  ['2023', 'Almaty TechCup', 'Control Award — 2nd Place'],
+  ['2023', 'Tamos FIRST Championship · Regional Qualifier', 'Control Award — Winner'],
+  ['—', 'Lepsi Fest', 'Connect Award — 2nd Place'],
+  ['FGC', 'FIRST Global Challenge', 'Winning Alliance Award — Winner'],
+  ['FGC', 'FIRST Global Challenge', 'International Unity Award — 2nd Place'],
+  ['FGC', 'FIRST Global Challenge', 'Skills Challenge — 3rd Place']
+]
+
+export const archiveImages = [
+  ['/assets/v7/team-indonesia-field.avif', 'INDONESIA / FIELD'],
+  ['/assets/v7/robot-centerstage.avif', 'ROBOT / COMPETITION'],
+  ['/assets/v7/robot-prototype.avif', 'ROBOT / PROTOTYPE'],
+  ['/assets/v7/robot-into-deep.avif', 'ROBOT / REVISION'],
+  ['/assets/v7/cad-black-purple.avif', 'CAD / CURRENT'],
+  ['/assets/v7/team-outdoors.avif', 'TEAM / OUTDOORS'],
+  ['/assets/v7/abai-bol-logo.avif', 'ABAI BOL / IDENTITY']
+]
+
+export const machineRevisions = robotVersions.map((revision, index) => ({
+  ...revision,
+  mode: index === robotVersions.length - 1 ? 'CAD MEMORY' : 'PHYSICAL BUILD',
+  inspection: index === robotVersions.length - 1
+    ? ['DESIGN INTENT', 'DIGITAL REVISION', 'TEAM ARCHIVE']
+    : ['PHYSICAL BUILD', 'COMPETITION CONFIGURATION', 'TEAM ARCHIVE'],
+}))
+
+export const recordYears = ['2023', '2024', '2025', '2026']
+
+export const awardsByYear = awards.reduce((groups, item) => {
+  const [year] = item
+  if (!groups[year]) groups[year] = []
+  groups[year].push(item)
+  return groups
+}, {})

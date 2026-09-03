@@ -1,107 +1,89 @@
-# ABAI BOL — FTC Robotics Portfolio V2
+# ABAI BOL V7 — Engineering Memory
 
-Award-oriented interactive portfolio for **ABAI BOL**, the Almaty robotics team formerly known as **ANTARES**.
+Submission-cut source for **ABAI BOL**, an FTC robotics team from Almaty, Kazakhstan, formerly **ANTARES**.
 
-This repository is intentionally separate from the earlier personal `Awwwardsportfolio` project.
+## Core idea
 
-## What V2 is
+**THE MACHINE REMEMBERS.**
 
-V2 is a robot-first interactive site rather than a template landing page:
+V7 is no longer structured like a robotics portfolio or a photo archive. It is an authored digital engineering-memory experience built around one line: **Every machine carries the decisions of the one before it.**
 
-- the supplied **Spline Nexbot fills the entire viewport** and remains interactive;
-- GSAP scroll choreography turns the hero into a multi-screen 3D chapter;
-- Paper Shaders, ShaderGradient and OGL create separate procedural visual fields;
-- Curtains.js upgrades a DOM technical poster into a distorted WebGL plane;
-- React Three Fiber + Drei power a real 3D season orbit below the fold;
-- an interactive engineering console is ready for the team's future real competition-robot CAD;
-- a sticky competition flight recorder presents 11 documented distinctions;
-- a fullscreen Mission Index keeps the long-form experience navigable;
-- mobile art direction and `prefers-reduced-motion` are first-class paths.
+The homepage is deliberately reduced to eight chapters:
+
+1. `00 SIGNAL` — Spline machine / Almaty signal.
+2. `01 CONTINUITY` — ANTARES → ABAI BOL.
+3. `02 MEMORY` — asymmetric 2023 → 2026 archive.
+4. `03 MACHINE` — robot lineage and engineering evidence merged into one inspection surface.
+5. `04 MISSION` — Almaty → Depok / Nusantara 2024.
+6. `05 FLIGHT RECORDER` — year navigation and awards merged into the only long scroll lock.
+7. `06 PEOPLE` — one group image plus discipline roster.
+8. `07 TRANSMISSION` — restrained magenta finale.
+
+## Signature interactions
+
+- **Memory Spine** — one fixed SVG line tracks document progress and changes visual mode by chapter.
+- **Machine inspection** — one sticky media viewport changes through supplied prototype, competition and CAD revisions; no invented measurements/specs.
+- **Mission route** — one real Indonesia photo is used as the emotional full-screen reward instead of a gallery sequence.
+- **Flight Recorder** — four-year navigation controls the active photo and year-specific supplied awards; `EXPAND COMPLETE RECORD` reveals all 18 distinctions.
+- **Archive Drawer** — the larger visual archive stays accessible without living in the homepage flow.
+
+## Production architecture
+
+- React 19 + Vite 8
+- delayed/lazy React Spline hero using the approved remote `scene.splinecode`
+- GSAP + ScrollTrigger for authored scroll motion
+- Lenis when reduced motion is not requested
+- Motion for the chapter-index transition
+- semantic DOM media with responsive WebP variants
+- Playwright browser regression tests + dependency-free structural contract
+
+Approved Spline scene:
+
+`https://prod.spline.design/bpyixqvv4QLqc5Hj/scene.splinecode`
+
+The supplied Nexbot GLB stays under `source-assets/robot-reference/` as reference material and is not the production hero runtime.
 
 ## Run locally
 
-Requires Node.js 22+.
-
 ```bash
-npm install
-npm run dev
-```
-
-Open:
-
-```text
-http://localhost:5173
-```
-
-## Production verification
-
-```bash
+npm ci
+npm run audit:static
 npm run build
-npm run preview
-```
-
-The GitHub workflow additionally runs Chromium smoke tests and captures full-page desktop/mobile QA screenshots.
-
-## Browser smoke tests
-
-Install Chromium once:
-
-```bash
 npx playwright install chromium
-```
-
-Then:
-
-```bash
-npm run build
-npm run preview -- --port 4173
-# in another terminal
 npm run test:smoke
 ```
 
-The tests verify:
+`predev` and `prebuild` restore `public/assets/` from `source-assets/public-assets.tar.gz` when the repository is checked out without unpacked media. The downloadable V7 package also contains the unpacked assets directly.
 
-- Spline is genuinely fullscreen;
-- engineering tabs work;
-- the R3F canvas renders;
-- the 11 award entries exist;
-- mobile has no page-level horizontal overflow;
-- reduced-motion removes the long pinned hero sequence;
-- no top-level browser page errors occur during the tested journey.
-
-## All uploaded ZIP sources
-
-Every source archive supplied for the project has a concrete role. The exact **22 ZIP → feature → code file** map lives in:
-
-[`SOURCE-INTEGRATION.md`](./SOURCE-INTEGRATION.md)
-
-The site does **not** copy all 22 repositories wholesale. Runtime renderers are installed where useful; component/demo repositories are adapted into one coherent local design system. This avoids duplicate frameworks, incompatible animation loops and a giant initial bundle.
-
-## Spline robot
-
-The supplied scene is used as a fullscreen interactive hero:
-
-`https://my.spline.design/nexbotrobotcharacterconcept-ENZaaWT2g7BsjXiqBZyGUnKB/`
-
-## Real competition robot CAD
-
-When the team provides its own GLB, read:
-
-[`ROBOT-CAD.md`](./ROBOT-CAD.md)
-
-Then place `robot.glb` in `public/` and run:
+Preview:
 
 ```bash
-npm run robot:prepare
+npm run preview
 ```
 
-## Identity
+## Current verification state
 
-**Current public name:** ABAI BOL  
-**Legacy identity/history:** ANTARES — same team.
+Locally completed:
 
-## Verification snapshot
+- V7 structural contract: **PASS / 0 FAIL**
+- JS/JSX parser check: **PASS**
+- packed-media restore check: **PASS** and byte-identical sentinel comparison
 
-The verified V2 dependency set is pinned in `package.json`. During CI, `npm audit --omit=dev` reports **0 production vulnerabilities**. Dev-only audit findings can come from build/test tooling and do not ship in the production Vite output.
+A local Vite build is blocked in this execution environment because `npm ci` repeatedly times out during package transport and leaves an incomplete `node_modules`. The repository quality workflow is included so the source can be independently built/tested in GitHub Actions with a normal npm network path.
 
-Awwwards selection can never be guaranteed; the implementation is deliberately optimized for originality, usability, creative development, responsive behavior and real content rather than promising an award outcome.
+## Content integrity
+
+V7 preserves the supplied 18-distinction record and does not invent member names, robot measurements, subsystem specifications, team-number chronology, certificate imagery or FGC photography attribution that the supplied sources do not establish.
+
+## Most valuable future source upgrades
+
+Not blockers for V7 code, but they raise the content ceiling:
+
+1. Engineering Portfolio / Engineering Notebook PDF.
+2. Official ABAI BOL SVG/Figma/AI.
+3. Spline object names / IDs / scene states.
+4. Current competition robot CAD source.
+5. Original-resolution hero/mission/team photography.
+6. Individual certificate files.
+7. Verified roster (name → role).
+8. Raw robot footage / short Spline mobile fallback video.

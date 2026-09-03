@@ -1,0 +1,10 @@
+{
+  "name": "ABAI BOL \u2014 Machine Memory",
+  "short_name": "ABAI BOL",
+  "description": "FTC robotics team from Almaty, Kazakhstan.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08070a",
+  "theme_color": "#08070a",
+  "icons": []
+}

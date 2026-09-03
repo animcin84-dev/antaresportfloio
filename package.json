@@ -1,38 +1,32 @@
 {
-  "name": "abai-bol-portfolio",
+  "name": "abai-bol-v7-engineering-memory",
   "private": true,
-  "version": "3.0.0",
+  "version": "7.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test:smoke": "playwright test tests/smoke.spec.js --project=chromium",
-    "robot:prepare": "gltfjsx public/assets/nexbot_robot_character_concept.glb --transform --types"
+    "test:smoke": "playwright test",
+    "audit:static": "node scripts/prepare-assets.mjs && node scripts/phase-contract.mjs",
+    "test:structure": "node scripts/prepare-assets.mjs && node scripts/phase-contract.mjs",
+    "predev": "node scripts/prepare-assets.mjs",
+    "prebuild": "node scripts/prepare-assets.mjs",
+    "pretest:smoke": "npm run build"
   },
   "dependencies": {
-    "@paper-design/shaders-react": "0.0.80",
-    "@react-three/drei": "10.7.8",
-    "@react-three/fiber": "9.7.0",
-    "@react-three/postprocessing": "3.1.1",
-    "@shadergradient/react": "2.4.20",
-    "@splinetool/react-spline": "4.1.0",
-    "@splinetool/runtime": "1.12.98",
-    "camera-controls": "3.1.2",
-    "curtainsjs": "8.1.6",
     "gsap": "3.15.0",
     "lenis": "1.3.26",
     "motion": "13.1.1",
-    "ogl": "1.0.11",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "three": "0.185.1",
-    "three-stdlib": "2.36.1"
+    "@splinetool/react-spline": "4.1.0",
+    "@splinetool/runtime": "1.12.98"
   },
   "devDependencies": {
     "@playwright/test": "1.55.0",
     "@vitejs/plugin-react": "6.1.1",
-    "gltfjsx": "6.5.3",
-    "vite": "8.2.2"
+    "vite": "8.2.2",
+    "typescript": "5.9.3"
   }
 }
