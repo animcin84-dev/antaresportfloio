@@ -42,24 +42,27 @@ jobs:
           cp /tmp/v7-source.tar.gz recovered/
           cp /tmp/source-files.txt recovered/
 
-      - name: Compare every media chunk to canonical manifest
+      - name: Verify canonical media chunks and corrections
         shell: bash
         run: |
-          set -u
-          mismatches=0
+          set -euo pipefail
           while read -r expected_sha expected_len name; do
+            case "$name" in
+              t7.004.b64|t7.028.b64) continue ;;
+            esac
             path="ci/v7-bootstrap/$name"
-            actual_len=$(wc -c < "$path")
-            actual_sha=$(git hash-object "$path")
-            if [ "$actual_len" != "$expected_len" ] || [ "$actual_sha" != "$expected_sha" ]; then
-              echo "MISMATCH $name expected_len=$expected_len actual_len=$actual_len expected_sha=$expected_sha actual_sha=$actual_sha"
-              mismatches=$((mismatches+1))
-            else
-              echo "OK $name"
-            fi
+            test "$(wc -c < "$path")" -eq "$expected_len"
+            test "$(git hash-object "$path")" = "$expected_sha"
           done < ci/v7-bootstrap/media-manifest.txt
-          echo "MEDIA_CHUNK_MISMATCHES=$mismatches"
-          test "$mismatches" -eq 0
+          test "$(wc -c < ci/v7-bootstrap/t7.004.fix-a.b64)" -eq 4000
+          test "$(git hash-object ci/v7-bootstrap/t7.004.fix-a.b64)" = '0c746d5ecc24022c5c1cc22f6727f9e639b3c0e7'
+          test "$(wc -c < ci/v7-bootstrap/t7.004.fix-b.b64)" -eq 3000
+          test "$(git hash-object ci/v7-bootstrap/t7.004.fix-b.b64)" = 'ce8a62f2263bcdd171efdfa85db151f367843cae'
+          test "$(wc -c < ci/v7-bootstrap/t7.028.fix-a.b64)" -eq 4000
+          test "$(git hash-object ci/v7-bootstrap/t7.028.fix-a.b64)" = '023819fc46f42438d1558eb6e18c01c3ba598114'
+          test "$(wc -c < ci/v7-bootstrap/t7.028.fix-b.b64)" -eq 3000
+          test "$(git hash-object ci/v7-bootstrap/t7.028.fix-b.b64)" = '5cc85066dbc602aab8df6c045b81f9858bc7fc20'
+          echo 'All canonical media chunks/corrections match the Drive reference.'
 
       - name: Reconstruct verified media archive
         shell: bash
@@ -67,7 +70,10 @@ jobs:
           set -euo pipefail
           {
             for f in ci/v7-bootstrap/media.{00..13}.b64; do cat "$f"; done
-            for f in ci/v7-bootstrap/t7.{000..028}.b64; do cat "$f"; done
+            for i in 000 001 002 003; do cat "ci/v7-bootstrap/t7.$i.b64"; done
+            cat ci/v7-bootstrap/t7.004.fix-a.b64 ci/v7-bootstrap/t7.004.fix-b.b64
+            for i in $(seq -w 5 27); do cat "ci/v7-bootstrap/t7.0$i.b64"; done
+            cat ci/v7-bootstrap/t7.028.fix-a.b64 ci/v7-bootstrap/t7.028.fix-b.b64
             cat ci/v7-bootstrap/t7.029.b64
           } > /tmp/v7-media.b64
           test "$(wc -c < /tmp/v7-media.b64)" -eq 362472
@@ -75,18 +81,16 @@ jobs:
           echo '09e1cfd374b6cbbb4ccb9ebb49b08d6fb2a449e9384aaeca5d0b459a3fee735c  /tmp/v7-media.tar.gz' | sha256sum -c -
           gzip -t /tmp/v7-media.tar.gz
           tar -tzf /tmp/v7-media.tar.gz > /tmp/media-files.txt
+          cat /tmp/media-files.txt
           test "$(grep -c '\.avif$' /tmp/media-files.txt)" -eq 7
           cp /tmp/v7-media.tar.gz recovered/
           cp /tmp/media-files.txt recovered/
 
       - name: Package recovered archives
-        if: always()
         shell: bash
-        run: |
-          if [ -d recovered ]; then sha256sum recovered/* > recovered/SHA256SUMS.txt || true; fi
+        run: sha256sum recovered/* > recovered/SHA256SUMS.txt
 
       - name: Upload recovered archives
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v7-recovered-bootstrap
