@@ -1,0 +1,10 @@
+.mission-v7-pin{
+  overflow:clip;
+  contain:paint;
+}
+
+@media (max-width:900px){
+  .machine-heading{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
