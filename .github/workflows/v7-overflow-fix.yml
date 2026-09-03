@@ -1,4 +1,4 @@
-name: V7 Apply Overflow Root Fixes
+name: V7 Export Overflow Root Fixes
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   patch:
@@ -43,12 +43,13 @@ jobs:
           node scripts/jsx-syntax-check.cjs
           git diff --check
           git diff -- src/styles.css
-      - name: Commit source fixes
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/styles.css
-          git commit -m 'Fix remaining V7 page overflow roots'
-          git push origin HEAD:v7-engineering-memory
+          sha256sum src/styles.css > fixed-styles.sha256
+      - name: Upload verified stylesheet
+        uses: actions/upload-artifact@v4
+        with:
+          name: v7-fixed-styles
+          path: |
+            src/styles.css
+            fixed-styles.sha256
+          if-no-files-found: error
+          retention-days: 7
