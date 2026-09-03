@@ -1,0 +1,54 @@
+name: V7 Apply Overflow Root Fixes
+
+on:
+  push:
+    branches: [v7-engineering-memory]
+    paths: ['.github/workflows/v7-overflow-fix.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install verification dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Patch remaining overflow roots
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/styles.css')
+          s = p.read_text()
+          pairs = [
+            ('.mission-v7-pin{position:sticky;top:0;height:100svh;overflow:hidden}',
+             '.mission-v7-pin{position:sticky;top:0;height:100svh;overflow:clip;contain:paint}'),
+            ('.machine-heading{grid-template-columns:1fr;min-height:58vh}',
+             '.machine-heading{grid-template-columns:minmax(0,1fr);min-height:58vh}'),
+          ]
+          for old, new in pairs:
+            if old not in s:
+              raise SystemExit(f'Expected CSS pattern missing: {old}')
+            s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+          npm run test:structure
+          node scripts/jsx-syntax-check.cjs
+          git diff --check
+          git diff -- src/styles.css
+      - name: Commit source fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/styles.css
+          git commit -m 'Fix remaining V7 page overflow roots'
+          git push origin HEAD:v7-engineering-memory
