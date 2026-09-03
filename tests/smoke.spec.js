@@ -1,5 +1,55 @@
 import { test, expect } from '@playwright/test'
 
+async function reportDesktopOverflow(page) {
+  const report = await page.evaluate(() => {
+    const viewport = document.documentElement.clientWidth
+    const describe = node => {
+      if (!node) return null
+      const rect = node.getBoundingClientRect()
+      const style = getComputedStyle(node)
+      return {
+        tag: node.tagName?.toLowerCase?.() || '',
+        id: node.id || '',
+        className: typeof node.className === 'string' ? node.className : '',
+        left: Math.round(rect.left * 10) / 10,
+        right: Math.round(rect.right * 10) / 10,
+        width: Math.round(rect.width * 10) / 10,
+        clientWidth: node.clientWidth,
+        scrollWidth: node.scrollWidth,
+        overflowX: style.overflowX,
+        contain: style.contain,
+        fontSize: style.fontSize,
+        transform: style.transform,
+      }
+    }
+    const rows = [...document.querySelectorAll('body *')]
+      .map(node => {
+        const rect = node.getBoundingClientRect()
+        return {
+          ...describe(node),
+          overflowRight: Math.round(Math.max(0, rect.right - viewport) * 10) / 10,
+          overflowLeft: Math.round(Math.max(0, -rect.left) * 10) / 10,
+          parent: describe(node.parentElement),
+        }
+      })
+      .filter(row => row.overflowRight > 1 || row.overflowLeft > 1)
+      .sort((a, b) => Math.max(b.overflowRight, b.overflowLeft) - Math.max(a.overflowRight, a.overflowLeft))
+      .slice(0, 24)
+    return {
+      viewport,
+      documentScrollWidth: document.documentElement.scrollWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+      continuitySection: describe(document.querySelector('.continuity-section')),
+      continuityStage: describe(document.querySelector('.continuity-stage')),
+      continuityCurrent: describe(document.querySelector('.continuity-current')),
+      missionPin: describe(document.querySelector('.mission-v7-pin')),
+      missionPhoto: describe(document.querySelector('.mission-v7-photo')),
+      rows,
+    }
+  })
+  console.log(`FINAL_DESKTOP_OVERFLOW ${JSON.stringify(report)}`)
+}
+
 test('desktop experience has no page-level overflow or uncaught app errors', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   const errors = []
@@ -7,6 +57,7 @@ test('desktop experience has no page-level overflow or uncaught app errors', asy
   await page.goto('/?quality=low')
   await page.waitForTimeout(700)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  if (overflow > 1) await reportDesktopOverflow(page)
   expect(overflow).toBeLessThanOrEqual(1)
   expect(errors).toEqual([])
 })
