@@ -1,0 +1,94 @@
+name: V7 Materialize Engineering Memory
+
+on:
+  push:
+    branches: [v7-engineering-memory]
+    paths:
+      - '.github/workflows/v7-bootstrap.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout bootstrap branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Reconstruct and verify source
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            cat ci/v7-bootstrap/source.00a.b64
+            tail -c +8001 ci/v7-bootstrap/source.00.b64
+            cat ci/v7-bootstrap/source.01.b64
+            cat ci/v7-bootstrap/source.02.b64
+            cat ci/v7-bootstrap/source.03a.b64
+            cat ci/v7-bootstrap/source.03b.b64
+            cat ci/v7-bootstrap/source.04.b64
+          } | base64 -d > /tmp/v7-source.tar.gz
+          echo 'a29c67812d9817c323db36cfde75c5f33d56402704b87e7cb80d8b91d03644ce  /tmp/v7-source.tar.gz' | sha256sum -c -
+          gzip -t /tmp/v7-source.tar.gz
+          mkdir -p /tmp/v7-source
+          tar -xzf /tmp/v7-source.tar.gz -C /tmp/v7-source
+          test -f /tmp/v7-source/package.json
+          test -f /tmp/v7-source/src/App.jsx
+          test -f /tmp/v7-source/.github/workflows/v7-quality.yml
+
+      - name: Reconstruct and verify media
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            for f in ci/v7-bootstrap/media.{00..13}.b64; do cat "$f"; done
+            for i in 000 001 002 003; do cat "ci/v7-bootstrap/t7.$i.b64"; done
+            cat ci/v7-bootstrap/t7.004.fix-a.b64 ci/v7-bootstrap/t7.004.fix-b.b64
+            for i in $(seq -w 5 27); do cat "ci/v7-bootstrap/t7.0$i.b64"; done
+            cat ci/v7-bootstrap/t7.028.fix-a.b64 ci/v7-bootstrap/t7.028.fix-b.b64
+            cat ci/v7-bootstrap/t7.029.b64
+          } > /tmp/v7-media.b64
+          test "$(wc -c < /tmp/v7-media.b64)" -eq 362472
+          base64 -d /tmp/v7-media.b64 > /tmp/v7-media.tar.gz
+          echo '09e1cfd374b6cbbb4ccb9ebb49b08d6fb2a449e9384aaeca5d0b459a3fee735c  /tmp/v7-media.tar.gz' | sha256sum -c -
+          gzip -t /tmp/v7-media.tar.gz
+          test "$(tar -tzf /tmp/v7-media.tar.gz | grep -c '\.avif$')" -eq 7
+
+      - name: Materialize clean V7 tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsync -a --delete --exclude='.git/' /tmp/v7-source/ ./
+          mkdir -p public
+          tar -xzf /tmp/v7-media.tar.gz -C public
+
+          test -f package.json
+          test -f src/App.jsx
+          test -f .github/workflows/v7-quality.yml
+          test -d public/assets/v7
+          test "$(find public/assets/v7 -maxdepth 1 -type f -name '*.avif' | wc -l)" -eq 7
+          test ! -e ci/v7-bootstrap
+          test ! -e .github/workflows/v7-recover.yml
+          test ! -e .github/workflows/v7-bootstrap.yml
+
+          echo 'Materialized V7 files:'
+          find public/assets/v7 -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+          git status --short
+
+      - name: Commit clean V7 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Build ABAI BOL V7 Engineering Memory source'
+          git push origin HEAD:v7-engineering-memory
