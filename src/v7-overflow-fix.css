@@ -3,8 +3,17 @@
   contain:paint;
 }
 
+.mission-v7-photo{
+  transform:scaleY(calc(1.06 - var(--mission-progress,0)*.035));
+}
+
 @media (max-width:900px){
   .machine-heading{
     grid-template-columns:minmax(0,1fr);
+  }
+
+  .machine-heading h2{
+    min-width:0;
+    font-size:clamp(54px,15vw,60px);
   }
 }
