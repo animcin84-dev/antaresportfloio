@@ -15,8 +15,8 @@ export default function ContinuitySection({ reduced = false }) {
         opacity: 0.2,
         scrollTrigger: { trigger: root.current, start: 'top 70%', end: 'bottom 35%', scrub: 0.7 },
       })
-      gsap.fromTo('.continuity-current', { xPercent: 12, opacity: 0.12 }, {
-        xPercent: 0,
+      gsap.fromTo('.continuity-current', { yPercent: 12, opacity: 0.12 }, {
+        yPercent: 0,
         opacity: 1,
         scrollTrigger: { trigger: root.current, start: 'top 65%', end: '65% 40%', scrub: 0.7 },
       })
