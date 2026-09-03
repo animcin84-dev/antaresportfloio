@@ -1,5 +1,31 @@
 import { test, expect } from '@playwright/test'
 
+async function reportOverflow(page, label) {
+  const report = await page.evaluate(() => {
+    const viewport = document.documentElement.clientWidth
+    const rows = [...document.querySelectorAll('body *')].map(node => {
+      const rect = node.getBoundingClientRect()
+      const right = rect.right - viewport
+      const left = -rect.left
+      return {
+        tag: node.tagName.toLowerCase(),
+        id: node.id || '',
+        className: typeof node.className === 'string' ? node.className : '',
+        left: Math.round(rect.left * 10) / 10,
+        right: Math.round(rect.right * 10) / 10,
+        width: Math.round(rect.width * 10) / 10,
+        overflowRight: Math.round(Math.max(0, right) * 10) / 10,
+        overflowLeft: Math.round(Math.max(0, left) * 10) / 10,
+      }
+    }).filter(row => row.overflowRight > 1 || row.overflowLeft > 1)
+      .sort((a, b) => Math.max(b.overflowRight, b.overflowLeft) - Math.max(a.overflowRight, a.overflowLeft))
+      .slice(0, 24)
+    return { viewport, scrollWidth: document.documentElement.scrollWidth, rows }
+  })
+  console.log(`OVERFLOW_REPORT ${label}: ${JSON.stringify(report)}`)
+  return report
+}
+
 test('desktop experience has no page-level overflow or uncaught app errors', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   const errors = []
@@ -7,6 +33,7 @@ test('desktop experience has no page-level overflow or uncaught app errors', asy
   await page.goto('/?quality=low')
   await page.waitForTimeout(700)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  if (overflow > 1) await reportOverflow(page, 'desktop')
   expect(overflow).toBeLessThanOrEqual(1)
   expect(errors).toEqual([])
 })
@@ -44,6 +71,7 @@ test('mobile director cut is overflow-safe', async ({ page }) => {
   await page.goto('/?quality=low')
   await page.waitForTimeout(600)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  if (overflow > 1) await reportOverflow(page, 'mobile')
   expect(overflow).toBeLessThanOrEqual(1)
   expect(errors).toEqual([])
 })
