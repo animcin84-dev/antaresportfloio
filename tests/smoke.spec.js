@@ -1,53 +1,5 @@
 import { test, expect } from '@playwright/test'
 
-async function reportOverflow(page, label) {
-  const report = await page.evaluate(() => {
-    const viewport = document.documentElement.clientWidth
-    const describe = node => {
-      if (!node) return null
-      const rect = node.getBoundingClientRect()
-      const style = getComputedStyle(node)
-      return {
-        tag: node.tagName?.toLowerCase?.() || '',
-        id: node.id || '',
-        className: typeof node.className === 'string' ? node.className : '',
-        left: Math.round(rect.left * 10) / 10,
-        right: Math.round(rect.right * 10) / 10,
-        width: Math.round(rect.width * 10) / 10,
-        clientWidth: node.clientWidth,
-        scrollWidth: node.scrollWidth,
-        overflowX: style.overflowX,
-        contain: style.contain,
-        gridTemplateColumns: style.gridTemplateColumns,
-        minWidth: style.minWidth,
-      }
-    }
-    const rows = [...document.querySelectorAll('body *')].map(node => {
-      const rect = node.getBoundingClientRect()
-      return {
-        ...describe(node),
-        overflowRight: Math.round(Math.max(0, rect.right - viewport) * 10) / 10,
-        overflowLeft: Math.round(Math.max(0, -rect.left) * 10) / 10,
-        parent: describe(node.parentElement),
-      }
-    }).filter(row => row.overflowRight > 1 || row.overflowLeft > 1)
-      .sort((a,b) => Math.max(b.overflowRight,b.overflowLeft) - Math.max(a.overflowRight,a.overflowLeft))
-      .slice(0,20)
-    return {
-      viewport,
-      documentScrollWidth: document.documentElement.scrollWidth,
-      bodyScrollWidth: document.body.scrollWidth,
-      missionPin: describe(document.querySelector('.mission-v7-pin')),
-      missionPhoto: describe(document.querySelector('.mission-v7-photo')),
-      machineHeading: describe(document.querySelector('.machine-heading')),
-      machineMeta: describe(document.querySelector('.machine-heading .chapter-meta')),
-      machineTitle: describe(document.querySelector('.machine-heading h2')),
-      rows,
-    }
-  })
-  console.log(`POST_FIX_OVERFLOW ${label}: ${JSON.stringify(report)}`)
-}
-
 test('desktop experience has no page-level overflow or uncaught app errors', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   const errors = []
@@ -55,7 +7,6 @@ test('desktop experience has no page-level overflow or uncaught app errors', asy
   await page.goto('/?quality=low')
   await page.waitForTimeout(700)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-  if (overflow > 1) await reportOverflow(page, 'desktop')
   expect(overflow).toBeLessThanOrEqual(1)
   expect(errors).toEqual([])
 })
@@ -94,7 +45,6 @@ test('mobile director cut is overflow-safe', async ({ page }) => {
   await page.goto('/?quality=low')
   await page.waitForTimeout(600)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
-  if (overflow > 1) await reportOverflow(page, 'mobile')
   expect(overflow).toBeLessThanOrEqual(1)
   expect(errors).toEqual([])
 })
