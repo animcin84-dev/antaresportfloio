@@ -1,0 +1,50 @@
+name: V7 quality
+
+on:
+  push:
+    branches: [v7-engineering-memory]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci --no-audit --no-fund
+      - name: Structural contract
+        run: npm run test:structure
+      - name: JSX syntax
+        run: node scripts/jsx-syntax-check.cjs
+      - name: Build
+        run: npm run build
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Chromium QA
+        run: npx playwright test --project=chromium
+
+      - name: Upload verified V7 build
+        uses: actions/upload-artifact@v4
+        with:
+          name: abai-bol-v7-verified
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            dist
+            public/assets/v7
+            src
+            tests
+            scripts
+            package.json
+            package-lock.json
+            index.html
+            README.md
+            V7-CHANGELOG.md
+            SUBMISSION-PACK.md
+            FINAL-QA.md
