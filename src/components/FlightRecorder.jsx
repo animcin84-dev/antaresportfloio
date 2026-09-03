@@ -27,7 +27,7 @@ export default function FlightRecorder({ reduced = false }) {
       start: 'top top',
       end: 'bottom bottom',
       scrub: 0.68,
-      snap: { snapTo: 1 / (recordYears.length - 1), duration: { min: .12, max: .3 }, delay: .04 },
+      snap: { snapTo: 1 / (recordYears.length - 1), duration: { min: .12, max: .3 }, delay: .04, inertia: false },
       onUpdate: self => {
         const next = Math.min(recordYears.length - 1, Math.round(self.progress * (recordYears.length - 1)))
         if (next !== previous) { previous = next; setActiveIndex(next) }
