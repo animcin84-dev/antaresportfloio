@@ -58,28 +58,26 @@ jobs:
           gzip -t /tmp/v7-media.tar.gz
           test "$(tar -tzf /tmp/v7-media.tar.gz | grep -c '\.avif$')" -eq 7
 
-      - name: Materialize clean V7 tree
+      - name: Materialize V7 without workflow mutations
         shell: bash
         run: |
           set -euo pipefail
-          rsync -a --delete --exclude='.git/' /tmp/v7-source/ ./
+          rsync -a --delete --exclude='.git/' --exclude='.github/workflows/' /tmp/v7-source/ ./
           mkdir -p public
           tar -xzf /tmp/v7-media.tar.gz -C public
 
           test -f package.json
           test -f src/App.jsx
-          test -f .github/workflows/v7-quality.yml
           test -d public/assets/v7
           test "$(find public/assets/v7 -maxdepth 1 -type f -name '*.avif' | wc -l)" -eq 7
           test ! -e ci/v7-bootstrap
-          test ! -e .github/workflows/v7-recover.yml
-          test ! -e .github/workflows/v7-bootstrap.yml
+          test -f .github/workflows/v7-bootstrap.yml
 
           echo 'Materialized V7 files:'
           find public/assets/v7 -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
           git status --short
 
-      - name: Commit clean V7 source
+      - name: Commit clean V7 source and media
         shell: bash
         run: |
           set -euo pipefail
@@ -89,6 +87,11 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
             exit 0
+          fi
+          if git diff --cached --name-only | grep -q '^\.github/workflows/'; then
+            echo 'Unexpected workflow mutation in runner commit.' >&2
+            git diff --cached --name-status -- .github/workflows/
+            exit 1
           fi
           git commit -m 'Build ABAI BOL V7 Engineering Memory source'
           git push origin HEAD:v7-engineering-memory
